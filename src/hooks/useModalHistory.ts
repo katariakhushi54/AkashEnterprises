@@ -8,9 +8,10 @@ export function useModalHistory(isOpen: boolean, onClose: () => void, modalId: s
     window.history.pushState({ modal: modalId }, '');
 
     const handlePopState = (e: PopStateEvent) => {
-      // If the back button is pressed, the state we pushed is popped.
-      // We should call onClose()
-      onClose();
+      // If the new state is not this modal's state, it means this modal was popped.
+      if (e.state?.modal !== modalId) {
+        onClose();
+      }
     };
 
     window.addEventListener('popstate', handlePopState);

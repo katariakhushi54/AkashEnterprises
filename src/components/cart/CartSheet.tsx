@@ -14,6 +14,52 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 
+function QuantityControl({ item, decreaseItem, updateQuantity, addItem }: any) {
+  const [localVal, setLocalVal] = useState(item.quantity.toString());
+
+  useEffect(() => {
+    setLocalVal(item.quantity.toString());
+  }, [item.quantity]);
+
+  return (
+    <div className="flex items-center bg-[#E5E3DC] dark:bg-[#222] rounded-xl h-10 p-1 shrink-0 shadow-inner">
+      <button 
+        onClick={() => decreaseItem(item.id)}
+        className="w-8 h-full flex items-center justify-center text-[#111111] dark:text-[#EBEBEB] rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+      >
+        <Minus size={14} />
+      </button>
+      
+      <input 
+        type="number"
+        min="1"
+        value={localVal}
+        onChange={(e) => {
+          setLocalVal(e.target.value);
+          const val = parseInt(e.target.value);
+          if (!isNaN(val) && val > 0) {
+            updateQuantity(item.id, val);
+          }
+        }}
+        onBlur={() => {
+          if (localVal === '' || parseInt(localVal) < 1) {
+            setLocalVal('1');
+            updateQuantity(item.id, 1);
+          }
+        }}
+        className="text-[14px] font-bold font-sans text-[#111111] dark:text-[#EBEBEB] w-10 h-full text-center bg-white dark:bg-[#111] border border-black/5 dark:border-white/5 rounded-md outline-none focus:ring-2 focus:ring-black/20 dark:focus:ring-white/20 p-0 mx-0.5 no-spinners cursor-text transition-all shadow-sm"
+      />
+      
+      <button 
+        onClick={() => addItem(item)}
+        className="w-8 h-full flex items-center justify-center text-[#111111] dark:text-[#EBEBEB] rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+      >
+        <Plus size={14} />
+      </button>
+    </div>
+  );
+}
+
 export function CartSheet() {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
@@ -99,39 +145,12 @@ export function CartSheet() {
                         <Trash2 size={16} />
                       </button>
                       
-                      <div className="flex items-center bg-[#E5E3DC] dark:bg-[#222] rounded-xl h-10 p-1 shrink-0">
-                        <button 
-                          onClick={() => decreaseItem(item.id)}
-                          className="w-8 h-full flex items-center justify-center text-[#111111] dark:text-[#EBEBEB] rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-                        >
-                          <Minus size={14} />
-                        </button>
-                        
-                        <input 
-                          type="number"
-                          min="1"
-                          value={item.quantity}
-                          onChange={(e) => {
-                            const val = parseInt(e.target.value);
-                            if (!isNaN(val) && val > 0) {
-                              updateQuantity(item.id, val);
-                            }
-                          }}
-                          onBlur={(e) => {
-                            if (e.target.value === '' || parseInt(e.target.value) < 1) {
-                              updateQuantity(item.id, 1);
-                            }
-                          }}
-                          className="text-[14px] font-bold font-sans text-[#111111] dark:text-[#EBEBEB] w-8 h-full text-center bg-transparent border-none outline-none focus:outline-none p-0 m-0 no-spinners cursor-text"
-                        />
-                        
-                        <button 
-                          onClick={() => addItem(item)}
-                          className="w-8 h-full flex items-center justify-center text-[#111111] dark:text-[#EBEBEB] rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-                        >
-                          <Plus size={14} />
-                        </button>
-                      </div>
+                      <QuantityControl 
+                        item={item} 
+                        decreaseItem={decreaseItem} 
+                        updateQuantity={updateQuantity} 
+                        addItem={addItem} 
+                      />
                     </div>
                   </div>
                 ))}

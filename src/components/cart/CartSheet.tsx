@@ -16,7 +16,6 @@ import { Separator } from "@/components/ui/separator";
 
 export function CartSheet() {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const { items, totalItems, removeItem, addItem, decreaseItem, updateQuantity } = useCartStore();
 
   const [mounted, setMounted] = useState(false);
@@ -75,114 +74,55 @@ export function CartSheet() {
           ) : (
             <>
             <ScrollArea className="flex-1 px-6 bg-[#F8F6F0] dark:bg-[#111111] transition-colors duration-300 relative overflow-hidden">
-              <div className="grid grid-cols-3 gap-2 py-6">
+              <div className="flex flex-col gap-3 py-6">
                 {items.map((item) => (
-                  <motion.div 
-                    key={item.id} 
-                    layoutId={`cart-image-${item.id}`}
-                    onClick={() => setSelectedItem(item)}
-                    className="relative w-full aspect-square overflow-hidden rounded-[12px] bg-[#E5E3DC] dark:bg-[#222] cursor-pointer group"
-                  >
-                    <img src={item.imageUrl} alt={item.name} className="absolute inset-0 h-full w-full object-cover transition-transform group-hover:scale-105" />
-                    {item.quantity > 1 && (
-                      <div className="absolute top-1 right-1 bg-black/50 backdrop-blur-md text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full z-10">
-                        x{item.quantity}
-                      </div>
-                    )}
-                  </motion.div>
+                  <div key={item.id} className="flex items-center gap-4 bg-[#E5E3DC]/30 dark:bg-[#222]/30 p-3 rounded-2xl border border-black/5 dark:border-white/5">
+                    <div className="w-16 h-20 shrink-0 rounded-[12px] overflow-hidden bg-[#E5E3DC] dark:bg-[#222]">
+                      <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-[14px] font-bold text-[#111111] dark:text-[#EBEBEB] truncate">{item.name}</h4>
+                      <p className="text-[13px] font-medium text-[#666666] dark:text-[#999999] mt-0.5">₹{item.price}</p>
+                    </div>
+                    
+                    <div className="flex items-center bg-[#E5E3DC] dark:bg-[#222] rounded-xl h-10 p-1 shrink-0">
+                      <button 
+                        onClick={() => decreaseItem(item.id)}
+                        className="w-8 h-full flex items-center justify-center text-[#111111] dark:text-[#EBEBEB] rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                      >
+                        {item.quantity === 1 ? <Trash2 size={14} className="text-red-500" /> : <Minus size={14} />}
+                      </button>
+                      
+                      <input 
+                        type="number"
+                        min="1"
+                        value={item.quantity}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value);
+                          if (!isNaN(val) && val > 0) {
+                            updateQuantity(item.id, val);
+                          }
+                        }}
+                        onBlur={(e) => {
+                          if (e.target.value === '' || parseInt(e.target.value) < 1) {
+                            updateQuantity(item.id, 1);
+                          }
+                        }}
+                        className="text-[14px] font-bold font-sans text-[#111111] dark:text-[#EBEBEB] w-8 h-full text-center bg-transparent border-none outline-none focus:outline-none p-0 m-0 no-spinners cursor-text"
+                      />
+                      
+                      <button 
+                        onClick={() => addItem(item)}
+                        className="w-8 h-full flex items-center justify-center text-[#111111] dark:text-[#EBEBEB] rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                      >
+                        <Plus size={14} />
+                      </button>
+                    </div>
+                  </div>
                 ))}
               </div>
             </ScrollArea>
-
-            {/* In-Cart Item Popup Overlay (Full Screen) */}
-            <AnimatePresence>
-                {selectedItem && (
-                  <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-[100] flex flex-col items-center justify-center p-6 bg-black/60 backdrop-blur-xl"
-                  >
-                    <div className="relative z-10 flex flex-col items-center w-[260px]">
-                      {/* Hard pixel spacer guarantees the layout NEVER collapses during transit */}
-                      <div className="w-[260px] h-[325px] shrink-0 mb-6">
-                        <motion.div 
-                          layoutId={`cart-image-${selectedItem.id}`}
-                          className="w-full h-full overflow-hidden bg-[#E5E3DC] dark:bg-[#222] shadow-2xl relative"
-                          style={{ borderRadius: '24px' }}
-                        >
-                          <img src={selectedItem.imageUrl} alt={selectedItem.name} className="absolute inset-0 h-full w-full object-cover" />
-                        </motion.div>
-                      </div>
-
-                      <motion.div 
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 10 }}
-                        transition={{ delay: 0.15, duration: 0.3 }}
-                        className="flex w-full flex-col gap-3 relative z-20"
-                      >
-                        {/* Quantity Controls */}
-                        <div className="flex items-center justify-between bg-[#F8F6F0] dark:bg-[#1A1A1A] rounded-2xl p-3 shadow-xl w-full border border-black/5 dark:border-white/10">
-                          <button 
-                            onClick={() => {
-                              decreaseItem(selectedItem.id);
-                              const currentQ = Number(selectedItem.quantity) || 1;
-                              if (currentQ <= 1) setSelectedItem(null);
-                              else setSelectedItem({ ...selectedItem, quantity: currentQ - 1 });
-                            }}
-                            className="w-12 h-12 flex items-center justify-center rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-[#111111] dark:text-[#EBEBEB] border-none outline-none focus:outline-none"
-                            style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}
-                          >
-                            {Number(selectedItem.quantity) <= 1 ? <Trash2 size={22} strokeWidth={2} className="text-red-500" /> : <Minus size={22} strokeWidth={2} />}
-                          </button>
-                          
-                          <input 
-                            type="number"
-                            min="1"
-                            value={selectedItem.quantity}
-                            onChange={(e) => {
-                              const val = parseInt(e.target.value);
-                              if (!isNaN(val) && val > 0) {
-                                updateQuantity(selectedItem.id, val);
-                                setSelectedItem({ ...selectedItem, quantity: val });
-                              } else if (e.target.value === '') {
-                                setSelectedItem({ ...selectedItem, quantity: '' });
-                              }
-                            }}
-                            onBlur={() => {
-                              if (selectedItem.quantity === '' || selectedItem.quantity < 1) {
-                                updateQuantity(selectedItem.id, 1);
-                                setSelectedItem({ ...selectedItem, quantity: 1 });
-                              }
-                            }}
-                            className="text-[20px] font-bold font-sans text-[#111111] dark:text-[#EBEBEB] w-16 h-12 text-center bg-[#E5E3DC] dark:bg-[#222] rounded-xl border border-transparent focus:border-black/20 dark:focus:border-white/20 focus:bg-[#DCDAD3] dark:focus:bg-[#333] hover:bg-[#DCDAD3] dark:hover:bg-[#333] outline-none transition-all p-0 m-0 no-spinners cursor-text shadow-inner"
-                          />
-                          
-                          <button 
-                            onClick={() => {
-                              addItem(selectedItem);
-                              const currentQ = Number(selectedItem.quantity) || 1;
-                              setSelectedItem({ ...selectedItem, quantity: currentQ + 1 });
-                            }}
-                            className="w-12 h-12 flex items-center justify-center rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-[#111111] dark:text-[#EBEBEB] border-none outline-none focus:outline-none"
-                            style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}
-                          >
-                            <Plus size={22} strokeWidth={2} />
-                          </button>
-                        </div>
-
-                        <button 
-                          onClick={() => setSelectedItem(null)}
-                          className="w-full h-14 rounded-2xl bg-[#111111] dark:bg-[#F8F6F0] hover:bg-black dark:hover:bg-white text-white dark:text-[#111111] font-bold text-[16px] shadow-2xl transition-transform hover:scale-105 border-none outline-none focus:outline-none"
-                        >
-                          Done
-                        </button>
-                      </motion.div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </>
           )}
 

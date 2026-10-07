@@ -70,10 +70,7 @@ export function CartSheet() {
   
   // Share Modal State
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [shareStep, setShareStep] = useState<'name' | 'link'>('name');
   const [customerName, setCustomerName] = useState('');
-  const [cartLink, setCartLink] = useState('');
-  const [isCopied, setIsCopied] = useState(false);
 
   // Clear Cart Modal State
   const [isClearCartModalOpen, setIsClearCartModalOpen] = useState(false);
@@ -95,7 +92,6 @@ export function CartSheet() {
 
   const handleShareCart = () => {
     if (items.length === 0) return;
-    setShareStep('name');
     setCustomerName('');
     setIsShareModalOpen(true);
   };
@@ -108,8 +104,11 @@ export function CartSheet() {
     const baseUrl = window.location.origin;
     const cartUrl = `${baseUrl}/cart?items=${itemIds}&name=${encodeURIComponent(customerName.trim())}`;
     
-    setCartLink(cartUrl);
-    setShareStep('link');
+    const message = `Hello Akash Enterprises! I would like to place an order.\n\nMy Name: ${customerName.trim()}\n\nHere is my cart: ${cartUrl}`;
+    const whatsappUrl = `https://wa.me/918390005505?text=${encodeURIComponent(message)}`;
+    
+    window.open(whatsappUrl, '_blank');
+    setIsShareModalOpen(false);
   };
 
   if (!mounted) return null;
@@ -252,7 +251,6 @@ export function CartSheet() {
                 <X size={16} strokeWidth={2.5} />
               </button>
 
-              {shareStep === 'name' ? (
                 <form onSubmit={handleGenerateLink} className="w-full flex flex-col items-center">
                   <h3 className="text-[20px] font-bold font-sans text-[#111111] dark:text-[#EBEBEB] mb-2">
                     Who is this for?
@@ -274,43 +272,12 @@ export function CartSheet() {
                   <button 
                     type="submit"
                     disabled={!customerName.trim()}
-                    className="w-full h-14 rounded-2xl bg-[#111111] dark:bg-[#F8F6F0] hover:bg-black dark:hover:bg-white text-white dark:text-[#111111] font-bold text-[15px] shadow-xl transition-colors border-none outline-none focus:outline-none flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full h-14 rounded-2xl bg-[#25D366] hover:bg-[#128C7E] text-white font-bold text-[15px] shadow-xl transition-colors border-none outline-none focus:outline-none flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Generate Link
+                    <Send size={18} />
+                    Send on WhatsApp
                   </button>
                 </form>
-              ) : (
-                <>
-                  <div className="w-16 h-16 bg-[#E5E3DC] dark:bg-[#222] rounded-full flex items-center justify-center mb-6">
-                    <Send size={28} className="text-[#111111] dark:text-[#EBEBEB] ml-1" />
-                  </div>
-                  
-                  <h3 className="text-[20px] font-bold font-sans text-[#111111] dark:text-[#EBEBEB] mb-2">
-                    Link Ready!
-                  </h3>
-                  
-                  <p className="text-[14px] font-medium text-[#666666] dark:text-[#999999] mb-8 leading-relaxed px-2">
-                    Copy this secure link and share it directly with us to finalize your purchase.
-                  </p>
-
-                  <div className="w-full bg-[#E5E3DC] dark:bg-[#222] rounded-2xl p-3 flex items-center justify-between gap-3 mb-4">
-                    <span className="text-[13px] font-medium text-[#111111] dark:text-[#EBEBEB] truncate flex-1 text-left select-all">
-                      {cartLink}
-                    </span>
-                  </div>
-
-                  <button 
-                    onClick={() => {
-                      navigator.clipboard.writeText(cartLink);
-                      setIsCopied(true);
-                      setTimeout(() => setIsCopied(false), 2000);
-                    }}
-                    className="w-full h-14 rounded-2xl bg-[#111111] dark:bg-[#F8F6F0] hover:bg-black dark:hover:bg-white text-white dark:text-[#111111] font-bold text-[15px] shadow-xl transition-colors border-none outline-none focus:outline-none flex items-center justify-center gap-2"
-                  >
-                    {isCopied ? "Copied!" : "Copy Link"}
-                  </button>
-                </>
-              )}
             </motion.div>
           </motion.div>
         )}

@@ -6,6 +6,7 @@ import { ArrowLeft, ShoppingBag, X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useModalHistory } from "@/hooks/useModalHistory";
 
 function SharedCartContent() {
   const searchParams = useSearchParams();
@@ -14,6 +15,8 @@ function SharedCartContent() {
   
   const [selectedItem, setSelectedItem] = useState<{product: any, quantity: number, idx: number} | null>(null);
   
+  useModalHistory(!!selectedItem, () => setSelectedItem(null), 'sharedCartItemImage');
+
   const sharedItems = itemsParam
     ? itemsParam.split(",").map((str) => {
         const parts = str.split("-");

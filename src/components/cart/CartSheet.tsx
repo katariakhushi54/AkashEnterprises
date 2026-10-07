@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { useModalHistory } from "@/hooks/useModalHistory";
 
 function QuantityControl({ item, decreaseItem, updateQuantity, addItem }: any) {
   const [localVal, setLocalVal] = useState(item.quantity.toString());
@@ -76,6 +77,11 @@ export function CartSheet() {
 
   // Clear Cart Modal State
   const [isClearCartModalOpen, setIsClearCartModalOpen] = useState(false);
+
+  useModalHistory(isOpen, () => setIsOpen(false), 'cart');
+  useModalHistory(isShareModalOpen, () => setIsShareModalOpen(false), 'shareCart');
+  useModalHistory(isClearCartModalOpen, () => setIsClearCartModalOpen(false), 'clearCart');
+  useModalHistory(!!selectedItem, () => setSelectedItem(null), 'cartItemImage');
 
   useEffect(() => {
     setMounted(true);
@@ -237,8 +243,15 @@ export function CartSheet() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-[320px] bg-[#F8F6F0] dark:bg-[#1A1A1A] rounded-[28px] p-8 shadow-2xl flex flex-col items-center text-center border border-black/5 dark:border-white/10"
+              className="w-full max-w-[320px] bg-[#F8F6F0] dark:bg-[#1A1A1A] rounded-[28px] p-8 shadow-2xl flex flex-col items-center text-center border border-black/5 dark:border-white/10 relative"
             >
+              <button 
+                onClick={() => setIsShareModalOpen(false)}
+                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/10 text-[#111111] dark:text-[#EBEBEB] hover:bg-black/10 dark:hover:bg-white/20 transition-colors"
+              >
+                <X size={16} strokeWidth={2.5} />
+              </button>
+
               {shareStep === 'name' ? (
                 <form onSubmit={handleGenerateLink} className="w-full flex flex-col items-center">
                   <h3 className="text-[20px] font-bold font-sans text-[#111111] dark:text-[#EBEBEB] mb-2">

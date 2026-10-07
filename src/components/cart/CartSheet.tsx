@@ -74,6 +74,9 @@ export function CartSheet() {
   const [cartLink, setCartLink] = useState('');
   const [isCopied, setIsCopied] = useState(false);
 
+  // Clear Cart Modal State
+  const [isClearCartModalOpen, setIsClearCartModalOpen] = useState(false);
+
   useEffect(() => {
     setMounted(true);
     
@@ -122,20 +125,22 @@ export function CartSheet() {
             <>
             <ScrollArea className="flex-1 px-6 bg-[#F8F6F0] dark:bg-[#111111] transition-colors duration-300 relative overflow-hidden">
               <div className="flex flex-col gap-3 py-6">
-                {items.map((item) => (
+                {items.map((item, index) => (
                   <div key={item.id} className="flex items-center gap-4 bg-[#E5E3DC]/30 dark:bg-[#222]/30 p-3 rounded-2xl border border-black/5 dark:border-white/5">
-                    <motion.div 
-                      layoutId={`cart-image-${item.id}`}
-                      onClick={() => setSelectedItem(item)}
-                      className="w-16 h-20 shrink-0 rounded-[12px] overflow-hidden bg-[#E5E3DC] dark:bg-[#222] cursor-pointer"
-                    >
-                      <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
-                    </motion.div>
-                    
-                    <div className="flex-1 min-w-0 pr-2">
-                      <h4 className="text-[14px] font-bold text-[#111111] dark:text-[#EBEBEB] truncate">{item.name}</h4>
-                      <p className="text-[13px] font-medium text-[#666666] dark:text-[#999999] mt-0.5">₹{item.price}</p>
+                    <div className="flex items-center gap-3">
+                      <span className="text-[15px] font-bold text-[#999999] dark:text-[#666666] w-5 text-right font-sans">
+                        {index + 1}.
+                      </span>
+                      <motion.div 
+                        layoutId={`cart-image-${item.id}`}
+                        onClick={() => setSelectedItem(item)}
+                        className="w-16 h-20 shrink-0 rounded-[12px] overflow-hidden bg-[#E5E3DC] dark:bg-[#222] cursor-pointer"
+                      >
+                        <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+                      </motion.div>
                     </div>
+                    
+                    <div className="flex-1" />
                     
                     <div className="flex items-center shrink-0">
                       <button 
@@ -197,11 +202,7 @@ export function CartSheet() {
           {items.length > 0 && (
             <div className="p-6 bg-[#F8F6F0] dark:bg-[#111111] border-t border-black/5 dark:border-white/10 transition-colors duration-300 relative z-40 flex items-center gap-3">
               <button 
-                onClick={() => {
-                  if (window.confirm("Are you sure you want to clear your entire cart?")) {
-                    clearCart();
-                  }
-                }}
+                onClick={() => setIsClearCartModalOpen(true)}
                 className="h-14 px-5 sm:px-6 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-600 font-bold text-[14px] sm:text-[15px] transition-colors border-none outline-none focus:outline-none shrink-0 flex items-center gap-2"
               >
                 <Trash2 size={18} />
@@ -297,6 +298,57 @@ export function CartSheet() {
                   </button>
                 </>
               )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Clear Cart Confirmation Modal */}
+      <AnimatePresence>
+        {isClearCartModalOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[300] flex flex-col items-center justify-center p-6 bg-black/60 backdrop-blur-xl"
+            onClick={() => setIsClearCartModalOpen(false)}
+          >
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-[320px] bg-[#F8F6F0] dark:bg-[#1A1A1A] rounded-[28px] p-8 shadow-2xl flex flex-col items-center text-center border border-black/5 dark:border-white/10"
+            >
+              <div className="w-16 h-16 bg-red-500/10 dark:bg-red-500/10 rounded-full flex items-center justify-center mb-6">
+                <Trash2 size={28} className="text-red-500" />
+              </div>
+              
+              <h3 className="text-[20px] font-bold font-sans text-[#111111] dark:text-[#EBEBEB] mb-2">
+                Clear Cart?
+              </h3>
+              
+              <p className="text-[14px] font-medium text-[#666666] dark:text-[#999999] mb-8 leading-relaxed px-2">
+                Are you sure you want to remove all items from your cart? This action cannot be undone.
+              </p>
+
+              <div className="flex w-full gap-3">
+                <button 
+                  onClick={() => setIsClearCartModalOpen(false)}
+                  className="flex-1 h-12 rounded-2xl bg-[#E5E3DC] dark:bg-[#333] hover:bg-[#D8D6CF] dark:hover:bg-[#444] text-[#111111] dark:text-[#EBEBEB] font-bold text-[15px] transition-colors border-none outline-none focus:outline-none"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={() => {
+                    clearCart();
+                    setIsClearCartModalOpen(false);
+                  }}
+                  className="flex-1 h-12 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-bold text-[15px] shadow-xl transition-colors border-none outline-none focus:outline-none"
+                >
+                  Clear
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}

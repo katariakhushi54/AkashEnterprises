@@ -116,7 +116,7 @@ export function CartSheet() {
   return (
     <>
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <SheetContent side="bottom" className="h-[66vh] sm:h-screen sm:max-w-md p-0 flex flex-col rounded-t-3xl sm:rounded-none bg-[#F8F6F0] dark:bg-[#111111] border-none shadow-2xl transition-colors duration-300">
+        <SheetContent side="bottom" className="max-h-[85vh] sm:h-screen sm:max-w-md p-0 flex flex-col rounded-t-3xl sm:rounded-none bg-[#F8F6F0] dark:bg-[#111111] border-none shadow-2xl transition-colors duration-300">
           <SheetHeader className="px-6 py-5 border-b border-black/5 dark:border-white/10 text-left bg-[#F8F6F0] dark:bg-[#111111] transition-colors duration-300">
             <SheetTitle className="text-xl font-bold font-sans text-[#111111] dark:text-[#EBEBEB]">Your Cart</SheetTitle>
           </SheetHeader>
@@ -128,7 +128,7 @@ export function CartSheet() {
             </div>
           ) : (
             <>
-            <ScrollArea className="flex-1 px-6 bg-[#F8F6F0] dark:bg-[#111111] transition-colors duration-300 relative overflow-hidden">
+            <ScrollArea className="flex-1 min-h-0 px-6 bg-[#F8F6F0] dark:bg-[#111111] transition-colors duration-300 relative overflow-hidden">
               <div className="flex flex-col gap-3 py-6">
                 {items.map((item, index) => (
                   <div key={item.id} className="flex items-center gap-4 bg-[#E5E3DC]/30 dark:bg-[#222]/30 p-3 rounded-2xl border border-black/5 dark:border-white/5">

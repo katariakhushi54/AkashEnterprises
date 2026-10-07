@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Product } from "@/data/products";
 import { useCartStore } from "@/store/useCartStore";
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, X } from "lucide-react";
 
 export function ProductCard({ product, showColors = false }: { product: Product, showColors?: boolean }) {
   const addItem = useCartStore((state) => state.addItem);
@@ -61,7 +61,7 @@ export function ProductCard({ product, showColors = false }: { product: Product,
             <div className="relative z-10 w-full max-w-sm flex flex-col items-center">
               <motion.div 
                 layoutId={`image-container-${product.id}`}
-                className="w-full overflow-hidden bg-[#E5E3DC] dark:bg-[#222] shadow-2xl"
+                className="w-full relative overflow-hidden bg-[#E5E3DC] dark:bg-[#222] shadow-2xl"
                 style={{ aspectRatio: '4/5', borderRadius: '24px' }}
               >
                 <motion.img
@@ -70,6 +70,19 @@ export function ProductCard({ product, showColors = false }: { product: Product,
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />
+                
+                {/* Elegant Overlapping Close Button */}
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ delay: 0.2, duration: 0.2 }}
+                  onClick={() => setIsModalOpen(false)}
+                  className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 dark:bg-black/40 backdrop-blur-md flex items-center justify-center text-white border border-white/30 dark:border-white/10 hover:bg-white/30 dark:hover:bg-black/60 transition-colors z-20"
+                  aria-label="Close modal"
+                >
+                  <X size={20} strokeWidth={2} />
+                </motion.button>
               </motion.div>
 
               <motion.div 

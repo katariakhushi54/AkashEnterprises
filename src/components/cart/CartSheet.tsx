@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, Send, Trash2, Plus, Minus } from "lucide-react";
+import { ShoppingBag, Send, Trash2, Plus, Minus, X } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
 import { useState, useEffect } from "react";
 import {
@@ -16,6 +16,7 @@ import { Separator } from "@/components/ui/separator";
 
 export function CartSheet() {
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const { items, totalItems, removeItem, addItem, decreaseItem, updateQuantity } = useCartStore();
 
   const [mounted, setMounted] = useState(false);
@@ -77,52 +78,100 @@ export function CartSheet() {
               <div className="flex flex-col gap-3 py-6">
                 {items.map((item) => (
                   <div key={item.id} className="flex items-center gap-4 bg-[#E5E3DC]/30 dark:bg-[#222]/30 p-3 rounded-2xl border border-black/5 dark:border-white/5">
-                    <div className="w-16 h-20 shrink-0 rounded-[12px] overflow-hidden bg-[#E5E3DC] dark:bg-[#222]">
+                    <motion.div 
+                      layoutId={`cart-image-${item.id}`}
+                      onClick={() => setSelectedItem(item)}
+                      className="w-16 h-20 shrink-0 rounded-[12px] overflow-hidden bg-[#E5E3DC] dark:bg-[#222] cursor-pointer"
+                    >
                       <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
-                    </div>
+                    </motion.div>
                     
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 pr-2">
                       <h4 className="text-[14px] font-bold text-[#111111] dark:text-[#EBEBEB] truncate">{item.name}</h4>
                       <p className="text-[13px] font-medium text-[#666666] dark:text-[#999999] mt-0.5">₹{item.price}</p>
                     </div>
                     
-                    <div className="flex items-center bg-[#E5E3DC] dark:bg-[#222] rounded-xl h-10 p-1 shrink-0">
+                    <div className="flex items-center shrink-0">
                       <button 
-                        onClick={() => decreaseItem(item.id)}
-                        className="w-8 h-full flex items-center justify-center text-[#111111] dark:text-[#EBEBEB] rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                        onClick={() => removeItem(item.id)}
+                        className="w-9 h-10 flex items-center justify-center text-red-500 bg-red-500/10 hover:bg-red-500/20 rounded-xl mr-3 transition-colors shrink-0"
                       >
-                        {item.quantity === 1 ? <Trash2 size={14} className="text-red-500" /> : <Minus size={14} />}
+                        <Trash2 size={16} />
                       </button>
                       
-                      <input 
-                        type="number"
-                        min="1"
-                        value={item.quantity}
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value);
-                          if (!isNaN(val) && val > 0) {
-                            updateQuantity(item.id, val);
-                          }
-                        }}
-                        onBlur={(e) => {
-                          if (e.target.value === '' || parseInt(e.target.value) < 1) {
-                            updateQuantity(item.id, 1);
-                          }
-                        }}
-                        className="text-[14px] font-bold font-sans text-[#111111] dark:text-[#EBEBEB] w-8 h-full text-center bg-transparent border-none outline-none focus:outline-none p-0 m-0 no-spinners cursor-text"
-                      />
-                      
-                      <button 
-                        onClick={() => addItem(item)}
-                        className="w-8 h-full flex items-center justify-center text-[#111111] dark:text-[#EBEBEB] rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-                      >
-                        <Plus size={14} />
-                      </button>
+                      <div className="flex items-center bg-[#E5E3DC] dark:bg-[#222] rounded-xl h-10 p-1 shrink-0">
+                        <button 
+                          onClick={() => decreaseItem(item.id)}
+                          className="w-8 h-full flex items-center justify-center text-[#111111] dark:text-[#EBEBEB] rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                        >
+                          <Minus size={14} />
+                        </button>
+                        
+                        <input 
+                          type="number"
+                          min="1"
+                          value={item.quantity}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value);
+                            if (!isNaN(val) && val > 0) {
+                              updateQuantity(item.id, val);
+                            }
+                          }}
+                          onBlur={(e) => {
+                            if (e.target.value === '' || parseInt(e.target.value) < 1) {
+                              updateQuantity(item.id, 1);
+                            }
+                          }}
+                          className="text-[14px] font-bold font-sans text-[#111111] dark:text-[#EBEBEB] w-8 h-full text-center bg-transparent border-none outline-none focus:outline-none p-0 m-0 no-spinners cursor-text"
+                        />
+                        
+                        <button 
+                          onClick={() => addItem(item)}
+                          className="w-8 h-full flex items-center justify-center text-[#111111] dark:text-[#EBEBEB] rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                        >
+                          <Plus size={14} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
             </ScrollArea>
+
+            {/* In-Cart Item Image Popup Overlay */}
+            <AnimatePresence>
+                {selectedItem && (
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-xl"
+                    onClick={() => setSelectedItem(null)}
+                  >
+                    <div className="relative z-10 w-full max-w-xs flex flex-col items-center">
+                      <motion.div 
+                        layoutId={`cart-image-${selectedItem.id}`}
+                        className="w-full relative overflow-hidden bg-[#E5E3DC] dark:bg-[#222] shadow-2xl"
+                        style={{ aspectRatio: '4/5', borderRadius: '24px' }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <img src={selectedItem.imageUrl} alt={selectedItem.name} className="absolute inset-0 h-full w-full object-cover" />
+                        
+                        <motion.button
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                          transition={{ delay: 0.1, duration: 0.2 }}
+                          onClick={() => setSelectedItem(null)}
+                          className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 dark:bg-black/40 backdrop-blur-md flex items-center justify-center text-white border border-white/30 dark:border-white/10 hover:bg-white/30 dark:hover:bg-black/60 transition-colors z-20"
+                        >
+                          <X size={20} strokeWidth={2} />
+                        </motion.button>
+                      </motion.div>
+                    </div>
+                  </motion.div>
+                )}
+            </AnimatePresence>
             </>
           )}
 

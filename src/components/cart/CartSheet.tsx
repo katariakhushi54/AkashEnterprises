@@ -318,8 +318,15 @@ export function CartSheet() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-[320px] bg-[#F8F6F0] dark:bg-[#1A1A1A] rounded-[28px] p-8 shadow-2xl flex flex-col items-center text-center border border-black/5 dark:border-white/10"
+              className="w-full max-w-[320px] bg-[#F8F6F0] dark:bg-[#1A1A1A] rounded-[28px] p-8 shadow-2xl flex flex-col items-center text-center border border-black/5 dark:border-white/10 relative"
             >
+              <button 
+                onClick={() => setIsClearCartModalOpen(false)}
+                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/10 text-[#111111] dark:text-[#EBEBEB] hover:bg-black/10 dark:hover:bg-white/20 transition-colors"
+              >
+                <X size={16} strokeWidth={2.5} />
+              </button>
+
               <div className="w-16 h-16 bg-red-500/10 dark:bg-red-500/10 rounded-full flex items-center justify-center mb-6">
                 <Trash2 size={28} className="text-red-500" />
               </div>

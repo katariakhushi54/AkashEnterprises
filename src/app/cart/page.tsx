@@ -50,28 +50,35 @@ function SharedCartContent() {
               Order Summary {customerName && <>for <span className="text-[#666666] dark:text-[#999999]">{customerName}</span></>}
             </h2>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-3">
               {sharedItems.map(({ product, quantity }, idx) => (
-                <motion.div 
-                  key={idx} 
-                  layoutId={`shared-image-${idx}`}
-                  onClick={() => setSelectedItem({ product, quantity, idx })}
-                  className="relative w-full aspect-[4/5] overflow-hidden rounded-[20px] bg-[#E5E3DC] dark:bg-[#222] cursor-pointer"
-                >
-                  <img
-                    src={product?.imageUrl}
-                    alt="Order Item"
-                    className="h-full w-full object-cover"
-                  />
-                  <div className="absolute top-3 left-3 bg-[#111111] dark:bg-[#F8F6F0] text-white dark:text-[#111111] w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-bold shadow-lg">
-                    {idx + 1}
-                  </div>
-                  {quantity > 1 && (
-                    <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md text-white text-[12px] font-bold px-2.5 py-1 rounded-full shadow-lg">
-                      x{quantity}
+                <div key={idx} className="flex items-center gap-4 bg-[#E5E3DC]/30 dark:bg-[#222]/30 p-3 rounded-2xl border border-black/5 dark:border-white/5 shadow-sm">
+                  <motion.div 
+                    layoutId={`shared-image-${idx}`}
+                    onClick={() => setSelectedItem({ product, quantity, idx })}
+                    className="relative w-16 h-20 shrink-0 rounded-[12px] overflow-hidden bg-[#E5E3DC] dark:bg-[#222] cursor-pointer"
+                  >
+                    <img
+                      src={product?.imageUrl}
+                      alt="Order Item"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute top-1 left-1 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm">
+                      {idx + 1}
                     </div>
-                  )}
-                </motion.div>
+                  </motion.div>
+                  
+                  <div className="flex-1 min-w-0 pr-2">
+                    <h4 className="text-[14px] font-bold text-[#111111] dark:text-[#EBEBEB] truncate">{product?.name}</h4>
+                    <p className="text-[13px] font-medium text-[#666666] dark:text-[#999999] mt-0.5">₹{product?.price}</p>
+                  </div>
+                  
+                  <div className="flex items-center justify-center bg-[#111111] dark:bg-[#F8F6F0] rounded-xl h-9 px-4 shrink-0 shadow-lg">
+                    <span className="text-[13px] font-bold text-white dark:text-[#111111]">
+                      x{quantity}
+                    </span>
+                  </div>
+                </div>
               ))}
             </div>
           </div>

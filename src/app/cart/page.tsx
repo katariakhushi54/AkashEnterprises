@@ -101,7 +101,7 @@ function SharedCartContent() {
               >
                 <img src={selectedItem.product.imageUrl} alt="Popup Item" className="absolute inset-0 h-full w-full object-cover" />
                 
-                <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md text-white text-[14px] font-bold px-3 py-1.5 rounded-full shadow-lg">
+                <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md text-white text-[14px] font-bold px-3 py-1.5 rounded-full shadow-lg">
                   x{selectedItem.quantity}
                 </div>
                 <motion.button

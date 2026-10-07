@@ -17,7 +17,7 @@ import { Separator } from "@/components/ui/separator";
 export function CartSheet() {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
-  const { items, totalItems, removeItem, addItem, decreaseItem, updateQuantity } = useCartStore();
+  const { items, totalItems, removeItem, addItem, decreaseItem, updateQuantity, clearCart } = useCartStore();
 
   const [mounted, setMounted] = useState(false);
   
@@ -176,9 +176,21 @@ export function CartSheet() {
           )}
 
           {items.length > 0 && (
-            <div className="p-6 bg-[#F8F6F0] dark:bg-[#111111] border-t border-black/5 dark:border-white/10 transition-colors duration-300 relative z-40">
+            <div className="p-6 bg-[#F8F6F0] dark:bg-[#111111] border-t border-black/5 dark:border-white/10 transition-colors duration-300 relative z-40 flex items-center gap-3">
               <button 
-                className="w-full h-14 rounded-full bg-[#111111] dark:bg-[#F8F6F0] hover:bg-black dark:hover:bg-white text-white dark:text-[#111111] font-bold text-[15px] font-sans flex items-center justify-center gap-2 border-none outline-none focus:outline-none transition-colors"
+                onClick={() => {
+                  if (window.confirm("Are you sure you want to clear your entire cart?")) {
+                    clearCart();
+                  }
+                }}
+                className="h-14 px-5 sm:px-6 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-600 font-bold text-[14px] sm:text-[15px] transition-colors border-none outline-none focus:outline-none shrink-0 flex items-center gap-2"
+              >
+                <Trash2 size={18} />
+                Clear
+              </button>
+              
+              <button 
+                className="flex-1 h-14 rounded-full bg-[#111111] dark:bg-[#F8F6F0] hover:bg-black dark:hover:bg-white text-white dark:text-[#111111] font-bold text-[15px] font-sans flex items-center justify-center gap-2 border-none outline-none focus:outline-none transition-colors"
                 onClick={handleShareCart}
                 style={{ border: 'none', boxShadow: 'none' }}
               >

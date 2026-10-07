@@ -53,20 +53,22 @@ function SharedCartContent() {
             <div className="flex flex-col gap-3">
               {sharedItems.map(({ product, quantity }, idx) => (
                 <div key={idx} className="flex items-center justify-between gap-4 bg-[#E5E3DC]/30 dark:bg-[#222]/30 p-3 rounded-2xl border border-black/5 dark:border-white/5 shadow-sm">
-                  <motion.div 
-                    layoutId={`shared-image-${idx}`}
-                    onClick={() => setSelectedItem({ product, quantity, idx })}
-                    className="relative w-20 h-24 shrink-0 rounded-[12px] overflow-hidden bg-[#E5E3DC] dark:bg-[#222] cursor-pointer"
-                  >
-                    <img
-                      src={product?.imageUrl}
-                      alt="Order Item"
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md text-white text-[11px] font-bold w-6 h-6 rounded-full flex items-center justify-center shadow-sm">
-                      {idx + 1}
-                    </div>
-                  </motion.div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[15px] font-bold text-[#999999] dark:text-[#666666] w-5 text-right font-sans">
+                      {idx + 1}.
+                    </span>
+                    <motion.div 
+                      layoutId={`shared-image-${idx}`}
+                      onClick={() => setSelectedItem({ product, quantity, idx })}
+                      className="relative w-20 h-24 shrink-0 rounded-[12px] overflow-hidden bg-[#E5E3DC] dark:bg-[#222] cursor-pointer"
+                    >
+                      <img
+                        src={product?.imageUrl}
+                        alt="Order Item"
+                        className="w-full h-full object-cover"
+                      />
+                    </motion.div>
+                  </div>
                   
                   <div className="flex items-center justify-center bg-[#111111] dark:bg-[#F8F6F0] rounded-xl h-10 px-5 shrink-0 shadow-lg">
                     <span className="text-[15px] font-bold text-white dark:text-[#111111]">
@@ -98,14 +100,10 @@ function SharedCartContent() {
                 onClick={(e) => e.stopPropagation()}
               >
                 <img src={selectedItem.product.imageUrl} alt="Popup Item" className="absolute inset-0 h-full w-full object-cover" />
-                <div className="absolute top-4 left-4 bg-[#111111] dark:bg-[#F8F6F0] text-white dark:text-[#111111] w-10 h-10 rounded-full flex items-center justify-center text-[15px] font-bold shadow-lg">
-                  {selectedItem.idx + 1}
+                
+                <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md text-white text-[14px] font-bold px-3 py-1.5 rounded-full shadow-lg">
+                  x{selectedItem.quantity}
                 </div>
-                {selectedItem.quantity > 1 && (
-                  <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md text-white text-[14px] font-bold px-3 py-1.5 rounded-full shadow-lg">
-                    x{selectedItem.quantity}
-                  </div>
-                )}
                 <motion.button
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}

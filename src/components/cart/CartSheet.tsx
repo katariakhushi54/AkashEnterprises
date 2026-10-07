@@ -17,7 +17,7 @@ import { Separator } from "@/components/ui/separator";
 export function CartSheet() {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
-  const { items, totalItems, removeItem, addItem, decreaseItem } = useCartStore();
+  const { items, totalItems, removeItem, addItem, decreaseItem, updateQuantity } = useCartStore();
 
   const [mounted, setMounted] = useState(false);
   
@@ -127,23 +127,43 @@ export function CartSheet() {
                           <button 
                             onClick={() => {
                               decreaseItem(selectedItem.id);
-                              if (selectedItem.quantity <= 1) setSelectedItem(null);
-                              else setSelectedItem({ ...selectedItem, quantity: selectedItem.quantity - 1 });
+                              const currentQ = Number(selectedItem.quantity) || 1;
+                              if (currentQ <= 1) setSelectedItem(null);
+                              else setSelectedItem({ ...selectedItem, quantity: currentQ - 1 });
                             }}
                             className="w-12 h-12 flex items-center justify-center rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-[#111111] dark:text-[#EBEBEB] border-none outline-none focus:outline-none"
                             style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}
                           >
-                            {selectedItem.quantity === 1 ? <Trash2 size={22} strokeWidth={2} className="text-red-500" /> : <Minus size={22} strokeWidth={2} />}
+                            {Number(selectedItem.quantity) <= 1 ? <Trash2 size={22} strokeWidth={2} className="text-red-500" /> : <Minus size={22} strokeWidth={2} />}
                           </button>
                           
-                          <span className="text-[20px] font-bold font-sans text-[#111111] dark:text-[#EBEBEB] w-8 text-center">
-                            {selectedItem.quantity}
-                          </span>
+                          <input 
+                            type="number"
+                            min="1"
+                            value={selectedItem.quantity}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value);
+                              if (!isNaN(val) && val > 0) {
+                                updateQuantity(selectedItem.id, val);
+                                setSelectedItem({ ...selectedItem, quantity: val });
+                              } else if (e.target.value === '') {
+                                setSelectedItem({ ...selectedItem, quantity: '' });
+                              }
+                            }}
+                            onBlur={() => {
+                              if (selectedItem.quantity === '' || selectedItem.quantity < 1) {
+                                updateQuantity(selectedItem.id, 1);
+                                setSelectedItem({ ...selectedItem, quantity: 1 });
+                              }
+                            }}
+                            className="text-[20px] font-bold font-sans text-[#111111] dark:text-[#EBEBEB] w-12 text-center bg-transparent border-none outline-none focus:outline-none p-0 m-0 no-spinners"
+                          />
                           
                           <button 
                             onClick={() => {
                               addItem(selectedItem);
-                              setSelectedItem({ ...selectedItem, quantity: selectedItem.quantity + 1 });
+                              const currentQ = Number(selectedItem.quantity) || 1;
+                              setSelectedItem({ ...selectedItem, quantity: currentQ + 1 });
                             }}
                             className="w-12 h-12 flex items-center justify-center rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-[#111111] dark:text-[#EBEBEB] border-none outline-none focus:outline-none"
                             style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}

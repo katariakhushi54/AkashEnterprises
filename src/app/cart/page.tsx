@@ -2,7 +2,7 @@
 
 import { products } from "@/data/products";
 import Link from "next/link";
-import { ArrowLeft, ShoppingBag } from "lucide-react";
+import { ArrowLeft, ShoppingBag, X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -100,10 +100,20 @@ function SharedCartContent() {
                   {selectedItem.idx + 1}
                 </div>
                 {selectedItem.quantity > 1 && (
-                  <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white text-[14px] font-bold px-3 py-1.5 rounded-full shadow-lg">
+                  <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md text-white text-[14px] font-bold px-3 py-1.5 rounded-full shadow-lg">
                     x{selectedItem.quantity}
                   </div>
                 )}
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ delay: 0.1, duration: 0.2 }}
+                  onClick={() => setSelectedItem(null)}
+                  className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 dark:bg-black/40 backdrop-blur-md flex items-center justify-center text-white border border-white/30 dark:border-white/10 hover:bg-white/30 dark:hover:bg-black/60 transition-colors z-20"
+                >
+                  <X size={20} strokeWidth={2} />
+                </motion.button>
               </motion.div>
             </div>
           </motion.div>

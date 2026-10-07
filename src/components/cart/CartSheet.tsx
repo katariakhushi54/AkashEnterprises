@@ -156,7 +156,7 @@ export function CartSheet() {
                                 setSelectedItem({ ...selectedItem, quantity: 1 });
                               }
                             }}
-                            className="text-[20px] font-bold font-sans text-[#111111] dark:text-[#EBEBEB] w-12 text-center bg-transparent border-none outline-none focus:outline-none p-0 m-0 no-spinners"
+                            className="text-[20px] font-bold font-sans text-[#111111] dark:text-[#EBEBEB] w-16 h-12 text-center bg-[#E5E3DC] dark:bg-[#222] rounded-xl border border-transparent focus:border-black/20 dark:focus:border-white/20 focus:bg-[#DCDAD3] dark:focus:bg-[#333] hover:bg-[#DCDAD3] dark:hover:bg-[#333] outline-none transition-all p-0 m-0 no-spinners cursor-text shadow-inner"
                           />
                           
                           <button 

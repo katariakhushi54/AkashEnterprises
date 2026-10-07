@@ -29,10 +29,7 @@ function SharedCartContent() {
 
   return (
     <main className="min-h-screen bg-[#F8F6F0] dark:bg-[#111111] pb-32 transition-colors duration-300 font-sans">
-      <header className="sticky top-0 z-30 flex h-16 items-center gap-4 bg-[#F8F6F0]/90 dark:bg-[#111111]/90 px-6 backdrop-blur-md border-b border-black/5 dark:border-white/10 mx-auto max-w-lg md:max-w-xl w-full transition-colors duration-300">
-        <Link href="/" className="p-1 -ml-1 text-[#111111] dark:text-[#EBEBEB] transition-colors focus:outline-none">
-          <ArrowLeft size={22} strokeWidth={1.5} />
-        </Link>
+      <header className="sticky top-0 z-30 flex h-16 items-center justify-center gap-4 bg-[#F8F6F0]/90 dark:bg-[#111111]/90 px-6 backdrop-blur-md border-b border-black/5 dark:border-white/10 mx-auto max-w-lg md:max-w-xl w-full transition-colors duration-300">
         <h1 className="text-[16px] font-bold tracking-tight text-[#111111] dark:text-[#EBEBEB]">
           Shared Cart
         </h1>

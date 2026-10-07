@@ -5,7 +5,8 @@ export function useModalHistory(isOpen: boolean, onClose: () => void, modalId: s
     if (!isOpen) return;
 
     // When modal opens, push a state
-    window.history.pushState({ modal: modalId }, '');
+    const currentState = window.history.state;
+    window.history.pushState({ ...currentState, modal: modalId }, '', window.location.href);
 
     const handlePopState = (e: PopStateEvent) => {
       // If the new state is not this modal's state, it means this modal was popped.

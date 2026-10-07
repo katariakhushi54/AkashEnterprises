@@ -5,10 +5,13 @@ import { Product } from "@/data/products";
 import { useCartStore } from "@/store/useCartStore";
 import { useState } from "react";
 import { Plus, X } from "lucide-react";
+import { useModalHistory } from "@/hooks/useModalHistory";
 
 export function ProductCard({ product, showColors = false }: { product: Product, showColors?: boolean }) {
   const addItem = useCartStore((state) => state.addItem);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useModalHistory(isModalOpen, () => setIsModalOpen(false), `productPopup-${product.id}`);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();

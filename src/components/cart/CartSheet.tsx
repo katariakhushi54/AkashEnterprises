@@ -11,7 +11,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import { Separator } from "@/components/ui/separator";
 import { useModalHistory } from "@/hooks/useModalHistory";
 
@@ -128,7 +128,10 @@ export function CartSheet() {
             </div>
           ) : (
             <>
-            <ScrollArea className="flex-1 min-h-0 px-6 bg-[#F8F6F0] dark:bg-[#111111] transition-colors duration-300 relative overflow-hidden">
+            <div 
+              className="w-full overflow-y-auto px-6 bg-[#F8F6F0] dark:bg-[#111111] transition-colors duration-300 pb-6"
+              style={{ maxHeight: 'calc(85vh - 180px)', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}
+            >
               <div className="flex flex-col gap-3 py-6">
                 {items.map((item, index) => (
                   <div key={item.id} className="flex items-center gap-4 bg-[#E5E3DC]/30 dark:bg-[#222]/30 p-3 rounded-2xl border border-black/5 dark:border-white/5">
@@ -165,7 +168,7 @@ export function CartSheet() {
                   </div>
                 ))}
               </div>
-            </ScrollArea>
+            </div>
 
             {/* In-Cart Item Image Popup Overlay */}
             <AnimatePresence>

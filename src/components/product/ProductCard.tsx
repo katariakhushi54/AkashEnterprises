@@ -16,8 +16,14 @@ export function ProductCard({ product, showColors = false }: { product: Product,
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
     addItem(product);
-    setIsModalOpen(false); // Optionally close modal on add
-    window.dispatchEvent(new CustomEvent('open-cart')); // Show them it was added
+    
+    // Close modal by popping history state first
+    window.history.back();
+    
+    // Wait a tiny bit for the popstate to finish before pushing the new cart state
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('open-cart'));
+    }, 150);
   };
 
   return (

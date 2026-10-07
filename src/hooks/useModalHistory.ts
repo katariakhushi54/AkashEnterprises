@@ -1,6 +1,12 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 export function useModalHistory(isOpen: boolean, onClose: () => void, modalId: string) {
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -11,7 +17,7 @@ export function useModalHistory(isOpen: boolean, onClose: () => void, modalId: s
     const handlePopState = (e: PopStateEvent) => {
       // If the new state is not this modal's state, it means this modal was popped.
       if (e.state?.modal !== modalId) {
-        onClose();
+        onCloseRef.current();
       }
     };
 
@@ -25,5 +31,5 @@ export function useModalHistory(isOpen: boolean, onClose: () => void, modalId: s
         window.history.back();
       }
     };
-  }, [isOpen, onClose, modalId]);
+  }, [isOpen, modalId]);
 }

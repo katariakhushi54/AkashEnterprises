@@ -13,8 +13,8 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "KHUSHI | Premium Fashion",
-  description: "Premium essentials for everyday living.",
+  title: "Akash Enterprises | Premium Fashion",
+  description: "Premium essentials for everyday living by Akash Enterprises.",
 };
 
 export default function RootLayout({

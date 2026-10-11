@@ -15,11 +15,25 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useModalHistory } from "@/hooks/useModalHistory";
 
-function QuantityControl({ item, decreaseItem, updateQuantity, addItem }: any) {
+interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  imageUrl: string;
+  category: string;
+  quantity: number;
+}
+
+function QuantityControl({ item, decreaseItem, updateQuantity, addItem }: {
+  item: CartItem;
+  decreaseItem: (id: string) => void;
+  updateQuantity: (id: string, qty: number) => void;
+  addItem: (item: Omit<CartItem, 'quantity'>) => void;
+}) {
   const [localVal, setLocalVal] = useState(item.quantity.toString());
 
   useEffect(() => {
-    setLocalVal(item.quantity.toString());
+    setTimeout(() => setLocalVal(item.quantity.toString()), 0);
   }, [item.quantity]);
 
   return (
@@ -63,7 +77,7 @@ function QuantityControl({ item, decreaseItem, updateQuantity, addItem }: any) {
 
 export function CartSheet() {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<any | null>(null);
+  const [selectedItem, setSelectedItem] = useState<CartItem | null>(null);
   const { items, totalItems, removeItem, addItem, decreaseItem, updateQuantity, clearCart } = useCartStore();
 
   const [mounted, setMounted] = useState(false);
@@ -81,7 +95,7 @@ export function CartSheet() {
   useModalHistory(!!selectedItem, () => setSelectedItem(null), 'cartItemImage');
 
   useEffect(() => {
-    setMounted(true);
+    setTimeout(() => setMounted(true), 0);
     
     const handleOpenCart = () => setIsOpen(true);
     window.addEventListener('open-cart', handleOpenCart);

@@ -13,7 +13,7 @@ function SharedCartContent() {
   const itemsParam = searchParams.get("items");
   const customerName = searchParams.get("name") || "";
   
-  const [selectedItem, setSelectedItem] = useState<{product: any, quantity: number, idx: number} | null>(null);
+  const [selectedItem, setSelectedItem] = useState<{product: { id: string, name: string, price: number, imageUrl: string, category: string }, quantity: number, idx: number} | null>(null);
   
   useModalHistory(!!selectedItem, () => setSelectedItem(null), 'sharedCartItemImage');
 
@@ -59,7 +59,7 @@ function SharedCartContent() {
                     </span>
                     <motion.div 
                       layoutId={`shared-image-${idx}`}
-                      onClick={() => setSelectedItem({ product, quantity, idx })}
+                      onClick={() => setSelectedItem({ product: product!, quantity, idx })}
                       className="relative w-20 h-24 shrink-0 rounded-[12px] overflow-hidden bg-[#E5E3DC] dark:bg-[#222] cursor-pointer"
                     >
                       <img

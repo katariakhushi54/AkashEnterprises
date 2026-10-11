@@ -10,7 +10,9 @@ export function Header() {
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
-    if (document.documentElement.classList.contains('dark')) setIsDark(true);
+    if (document.documentElement.classList.contains('dark')) {
+      setTimeout(() => setIsDark(true), 0);
+    }
   }, []);
 
   const toggleDark = () => {

@@ -115,7 +115,8 @@ export function CartSheet() {
     if (!customerName.trim()) return;
 
     const itemIds = items.map((i) => `${i.id}-${i.quantity}`).join(",");
-    const baseUrl = window.location.origin;
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const baseUrl = isLocal ? 'https://akashenterprises.vercel.app' : window.location.origin;
     const cartUrl = `${baseUrl}/cart?items=${itemIds}&name=${encodeURIComponent(customerName.trim())}`;
     
     const message = `Hello Akash Enterprises! I would like to place an order.\n\nMy Name: ${customerName.trim()}\n\nHere is my cart: ${cartUrl}`;

@@ -1,30 +1,47 @@
 "use client";
 
-import { products } from "@/data/products";
+import { products as fallbackProducts, Product } from "@/data/products";
 import Link from "next/link";
-import { ArrowLeft, ShoppingBag, X } from "lucide-react";
+import { ArrowLeft, ShoppingBag, X, Loader2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useModalHistory } from "@/hooks/useModalHistory";
+import { getStorefrontData } from "../actions";
 
 function SharedCartContent() {
   const searchParams = useSearchParams();
   const itemsParam = searchParams.get("items");
   const customerName = searchParams.get("name") || "";
   
+  const [allProducts, setAllProducts] = useState<Product[]>(fallbackProducts);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<{product: { id: string, name: string, price: number, imageUrl: string, category: string }, quantity: number, idx: number} | null>(null);
   
   useModalHistory(!!selectedItem, () => setSelectedItem(null), 'sharedCartItemImage');
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const data = await getStorefrontData();
+        setAllProducts([...data.products, ...fallbackProducts]);
+      } catch (e) {
+        console.error("Failed to load storefront data for cart", e);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadData();
+  }, []);
 
   const sharedItems = itemsParam
     ? itemsParam.split(",").map((str) => {
         const parts = str.split("-");
         const id = parts.slice(0, -1).join("-");
         const quantity = parseInt(parts[parts.length - 1] || "1", 10);
-        const product = products.find((p) => p.id === id);
+        const product = allProducts.find((p) => p.id === id);
         return { product, quantity };
-      }).filter(item => item.product !== undefined)
+      }).filter((item): item is { product: Product, quantity: number } => item.product !== undefined)
     : [];
 
   return (
@@ -36,7 +53,12 @@ function SharedCartContent() {
       </header>
 
       <div className="mx-auto max-w-lg md:max-w-xl px-4 pt-8 w-full">
-        {sharedItems.length === 0 ? (
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-24 text-[#999999] dark:text-[#666666]">
+            <Loader2 className="animate-spin mb-4 text-[#111111] dark:text-[#EBEBEB]" size={36} />
+            <p className="text-[16px] font-medium">Loading cart items...</p>
+          </div>
+        ) : sharedItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-[#999999] dark:text-[#666666]">
             <ShoppingBag size={48} className="mb-4 opacity-20" />
             <p className="text-[16px] font-medium">This cart is empty or invalid.</p>

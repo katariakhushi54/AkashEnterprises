@@ -95,11 +95,11 @@ function SharedCartContent() {
             <div className="relative z-10 w-full max-w-md flex flex-col items-center">
               <motion.div 
                 layoutId={`shared-image-${selectedItem.idx}`}
-                className="w-full overflow-hidden bg-[#E5E3DC] dark:bg-[#222] shadow-2xl relative"
-                style={{ aspectRatio: '4/5', borderRadius: '24px' }}
+                className="w-full relative overflow-hidden rounded-[24px] bg-[#E5E3DC] dark:bg-[#222] shadow-2xl flex items-center justify-center"
+                style={{ maxHeight: '72vh' }}
                 onClick={(e) => e.stopPropagation()}
               >
-                <img src={selectedItem.product.imageUrl} alt="Popup Item" className="absolute inset-0 h-full w-full object-cover" />
+                <img src={selectedItem.product.imageUrl} alt="Popup Item" className="w-full h-auto max-h-[72vh] object-contain block" />
                 
                 <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md text-white text-[14px] font-bold px-3 py-1.5 rounded-full shadow-lg">
                   x{selectedItem.quantity}

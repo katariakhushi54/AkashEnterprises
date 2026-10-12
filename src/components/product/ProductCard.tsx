@@ -67,17 +67,17 @@ export function ProductCard({ product, showColors = false }: { product: Product,
             />
             
             {/* Modal Content */}
-            <div className="relative z-10 w-full max-w-sm flex flex-col items-center">
+            <div className="relative z-10 w-full max-w-sm sm:max-w-md flex flex-col items-center">
               <motion.div 
                 layoutId={`image-container-${product.id}`}
-                className="w-full relative overflow-hidden bg-[#E5E3DC] dark:bg-[#222] shadow-2xl"
-                style={{ aspectRatio: '4/5', borderRadius: '24px' }}
+                className="w-full relative overflow-hidden rounded-[24px] bg-[#E5E3DC] dark:bg-[#222] shadow-2xl flex items-center justify-center"
+                style={{ maxHeight: '72vh' }}
               >
                 <motion.img
                   layoutId={`image-${product.id}`}
                   src={product.imageUrl}
                   alt={product.name}
-                  className="w-full h-full object-cover"
+                  className="w-full h-auto max-h-[72vh] object-contain block"
                 />
                 
                 {/* Elegant Overlapping Close Button */}

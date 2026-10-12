@@ -194,14 +194,14 @@ export function CartSheet() {
                     className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-xl"
                     onClick={() => setSelectedItem(null)}
                   >
-                    <div className="relative z-10 w-full max-w-xs flex flex-col items-center">
+                    <div className="relative z-10 w-full max-w-sm flex flex-col items-center">
                       <motion.div 
                         layoutId={`cart-image-${selectedItem.id}`}
-                        className="w-full relative overflow-hidden bg-[#E5E3DC] dark:bg-[#222] shadow-2xl"
-                        style={{ aspectRatio: '4/5', borderRadius: '24px' }}
+                        className="w-full relative overflow-hidden rounded-[24px] bg-[#E5E3DC] dark:bg-[#222] shadow-2xl flex items-center justify-center"
+                        style={{ maxHeight: '72vh' }}
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <img src={selectedItem.imageUrl} alt={selectedItem.name} className="absolute inset-0 h-full w-full object-cover" />
+                        <img src={selectedItem.imageUrl} alt={selectedItem.name} className="w-full h-auto max-h-[72vh] object-contain block" />
                         
                         <motion.button
                           initial={{ opacity: 0, scale: 0.8 }}

@@ -2,12 +2,26 @@
 
 import { useState, useEffect } from 'react';
 import { Upload, Plus, Image as ImageIcon, LogIn, Loader2, X, CheckCircle2, Pencil, Trash2, AlertCircle } from 'lucide-react';
-import { getCategories, createCategory, uploadAsset, addAssetsToCategory, getCategoryImages, getAllImages, updateCategory, deleteCategory, clearCategoryImages, deleteCategoryImage, loginAdmin, logoutAdmin, checkAdminAuth } from './actions';
+import { getCategories, createCategory, uploadAsset, addAssetsToCategory, getCategoryImages, getAllImages, updateCategory, deleteCategory, clearCategoryImages, deleteCategoryImage, updateImagePrice, updateImageSizes, setCategoryPrice, loginAdmin, logoutAdmin, checkAdminAuth } from './actions';
+import { normalizeSizes } from '@/lib/sizes';
+import { SizeTagEditor } from '@/components/admin/SizeTagEditor';
 
 interface Category {
   _id?: string;
   id?: string;
   title: string;
+  price?: number;
+  sizes?: string[];
+}
+
+interface AdminImage {
+  url: string;
+  _key: string;
+  categoryId?: string;
+  price?: number;
+  sizes?: string[];
+  categoryPrice?: number;
+  categorySizes?: string[];
 }
 
 export default function CustomAdminDashboard() {
@@ -20,20 +34,27 @@ export default function CustomAdminDashboard() {
   
   const [categories, setCategories] = useState<Category[]>([]);
   const [activeCategory, setActiveCategory] = useState<Category | null>(null);
-  const [activeCategoryImages, setActiveCategoryImages] = useState<{url: string, _key: string, categoryId?: string}[]>([]);
+  const [activeCategoryImages, setActiveCategoryImages] = useState<AdminImage[]>([]);
   
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryPrice, setNewCategoryPrice] = useState('');
+  const [newCategorySizes, setNewCategorySizes] = useState<string[]>([]);
   const [isEditingCategory, setIsEditingCategory] = useState(false);
   const [editCategoryName, setEditCategoryName] = useState('');
+  const [editCategoryPrice, setEditCategoryPrice] = useState('');
+  const [editCategorySizes, setEditCategorySizes] = useState<string[]>([]);
   const [isDeleteCategoryOpen, setIsDeleteCategoryOpen] = useState(false);
   const [isClearImagesOpen, setIsClearImagesOpen] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<{url: string, _key: string, categoryId?: string} | null>(null);
+  const [selectedImage, setSelectedImage] = useState<AdminImage | null>(null);
+  const [imagePriceInput, setImagePriceInput] = useState('');
+  const [imageSizes, setImageSizes] = useState<string[]>([]);
+  const [isSavingPrice, setIsSavingPrice] = useState(false);
 
-  const loadImages = async (categoryId: string) => {
+  const loadImages = async (categoryId: string, catPrice?: number, catSizes?: string[]) => {
     setIsLoading(true);
     try {
       if (categoryId === 'all') {
@@ -41,7 +62,12 @@ export default function CustomAdminDashboard() {
         setActiveCategoryImages(images);
       } else {
         const images = await getCategoryImages(categoryId);
-        setActiveCategoryImages(images.map((img: { url: string, _key: string }) => ({ ...img, categoryId })));
+        setActiveCategoryImages(images.map((img: AdminImage) => ({ 
+          ...img, 
+          categoryId,
+          categoryPrice: catPrice !== undefined ? catPrice : activeCategory?.price,
+          categorySizes: catSizes !== undefined ? catSizes : activeCategory?.sizes
+        })));
       }
     } catch (e) {
       console.error(e);
@@ -115,15 +141,27 @@ export default function CustomAdminDashboard() {
     }
   }, [isAuthenticated, isCheckingAuth]);
 
-  const openModal = (type: 'add' | 'edit' | 'image' | 'delete' | 'clear' | 'error', data?: string | { url: string, _key: string, categoryId?: string }) => {
+  const openModal = (type: 'add' | 'edit' | 'image' | 'delete' | 'clear' | 'error', data?: string | AdminImage) => {
     const currentState = window.history.state || {};
     window.history.pushState({ ...currentState, modal: type }, '');
-    if (type === 'add') setIsAddingCategory(true);
+    if (type === 'add') {
+      setNewCategoryName('');
+      setNewCategoryPrice('');
+      setNewCategorySizes([]);
+      setIsAddingCategory(true);
+    }
     if (type === 'edit') {
-      setEditCategoryName(data as string);
+      setEditCategoryName(activeCategory?.title || (typeof data === 'string' ? data : ''));
+      setEditCategoryPrice(activeCategory?.price ? activeCategory.price.toString() : '');
+      setEditCategorySizes(activeCategory?.sizes ? normalizeSizes(activeCategory.sizes) : []);
       setIsEditingCategory(true);
     }
-    if (type === 'image') setSelectedImage(data as { url: string, _key: string, categoryId?: string });
+    if (type === 'image') {
+      const img = data as AdminImage;
+      setSelectedImage(img);
+      setImagePriceInput(img.price ? img.price.toString() : '');
+      setImageSizes(img.sizes ? normalizeSizes(img.sizes) : []);
+    }
     if (type === 'delete') setIsDeleteCategoryOpen(true);
     if (type === 'clear') setIsClearImagesOpen(true);
     if (type === 'error') setErrorAlert(data as string);
@@ -167,7 +205,7 @@ export default function CustomAdminDashboard() {
     setActiveCategory(cat);
     setActiveCategoryImages([]);
     setUploadSuccess(false);
-    loadImages(cat._id || cat.id || '');
+    loadImages(cat._id || cat.id || '', cat.price, cat.sizes);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -204,10 +242,14 @@ export default function CustomAdminDashboard() {
     
     setIsLoading(true);
     try {
-      const newCat = await createCategory(newCategoryName);
+      const parsedPrice = newCategoryPrice.trim() ? Number(newCategoryPrice.trim()) : undefined;
+      const cleanSizes = newCategorySizes.length > 0 ? newCategorySizes : undefined;
+      const newCat = await createCategory(newCategoryName, parsedPrice, cleanSizes);
       setCategories([...categories, newCat]);
       handleSelectCategory(newCat);
       setNewCategoryName('');
+      setNewCategoryPrice('');
+      setNewCategorySizes([]);
       closeModal();
     } catch (e) {
       console.error(e);
@@ -224,9 +266,18 @@ export default function CustomAdminDashboard() {
     try {
       const catId = activeCategory._id || activeCategory.id;
       if (!catId) return;
-      await updateCategory(catId, editCategoryName);
-      setCategories(categories.map(c => (c._id || c.id) === catId ? { ...c, title: editCategoryName } : c));
-      setActiveCategory({ ...activeCategory, title: editCategoryName });
+      const parsedPrice = editCategoryPrice.trim() ? Number(editCategoryPrice.trim()) : null;
+      const cleanSizes = editCategorySizes.length > 0 ? editCategorySizes : null;
+      await updateCategory(catId, editCategoryName, parsedPrice, cleanSizes);
+      
+      const updatedCat: Category = { 
+        ...activeCategory, 
+        title: editCategoryName, 
+        price: parsedPrice && parsedPrice > 0 ? parsedPrice : undefined,
+        sizes: cleanSizes && cleanSizes.length > 0 ? cleanSizes : undefined
+      };
+      setCategories(categories.map(c => (c._id || c.id) === catId ? updatedCat : c));
+      setActiveCategory(updatedCat);
       closeModal();
     } catch (e) {
       console.error(e);
@@ -234,6 +285,44 @@ export default function CustomAdminDashboard() {
     }
     setIsLoading(false);
   };
+
+  const handleSaveImageDetails = async () => {
+    if (!selectedImage) return;
+    const catId = selectedImage.categoryId || activeCategory?._id || activeCategory?.id;
+    if (!catId || catId === 'all') {
+      openModal('error', 'Please navigate to the specific category to set this item details');
+      return;
+    }
+    setIsSavingPrice(true);
+    try {
+      const priceNum = imagePriceInput.trim() ? Number(imagePriceInput.trim()) : null;
+      await updateImagePrice(catId, selectedImage._key, priceNum);
+
+      const cleanSizes = imageSizes.length > 0 ? imageSizes : null;
+      await updateImageSizes(catId, selectedImage._key, cleanSizes);
+      
+      // Update local state
+      setActiveCategoryImages(prev => prev.map(img => 
+        img._key === selectedImage._key 
+          ? { 
+              ...img, 
+              price: priceNum && priceNum > 0 ? priceNum : undefined,
+              sizes: cleanSizes && cleanSizes.length > 0 ? cleanSizes : undefined
+            } 
+          : img
+      ));
+      
+      // Close popup modal
+      setSelectedImage(null);
+      closeModal();
+    } catch (e) {
+      console.error(e);
+      openModal('error', 'Failed to update image details');
+    } finally {
+      setIsSavingPrice(false);
+    }
+  };
+
 
   const handleDeleteCategory = async () => {
     if (!activeCategory) return;
@@ -402,13 +491,22 @@ export default function CustomAdminDashboard() {
             <button 
               key={cat._id || cat.id}
               onClick={() => handleSelectCategory(cat)}
-              className={`w-full text-left px-5 py-4 rounded-2xl font-bold text-[15px] transition-all ${
+              className={`w-full text-left px-5 py-4 rounded-2xl font-bold text-[15px] transition-all flex items-center justify-between ${
                 isActive
                   ? 'bg-[#111111] text-white dark:bg-[#EBEBEB] dark:text-[#111111] shadow-xl' 
                   : 'bg-white dark:bg-[#1A1A1A] hover:bg-[#E5E3DC] dark:hover:bg-[#222]'
               }`}
             >
-              {cat.title}
+              <span className="truncate">{cat.title}</span>
+              {cat.price ? (
+                <span className={`text-[12px] font-semibold px-2 py-0.5 rounded-full shrink-0 ml-2 ${
+                  isActive 
+                    ? 'bg-white/20 text-white dark:bg-black/20 dark:text-[#111111]' 
+                    : 'bg-black/5 dark:bg-white/10 text-[#666] dark:text-[#999]'
+                }`}>
+                  ₹{cat.price}
+                </span>
+              ) : null}
             </button>
           )})}
 
@@ -434,9 +532,16 @@ export default function CustomAdminDashboard() {
                 </button>
               </div>
               <div className="flex items-center justify-between mb-6 pb-2">
-                <h2 className="text-[24px] font-bold">
-                  {activeCategory._id === 'all' ? activeCategory.title : `Upload to ${activeCategory.title}`}
-                </h2>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h2 className="text-[24px] font-bold">
+                    {activeCategory._id === 'all' ? activeCategory.title : `Upload to ${activeCategory.title}`}
+                  </h2>
+                  {activeCategory._id !== 'all' && activeCategory.price ? (
+                    <span className="text-[13px] font-bold px-3 py-1 rounded-full bg-black/5 dark:bg-white/10 text-[#111111] dark:text-[#EBEBEB]">
+                      Default: ₹{activeCategory.price}
+                    </span>
+                  ) : null}
+                </div>
                 {activeCategory._id !== 'all' && (
                   <div className="flex gap-2">
                     <button onClick={() => openModal('edit', activeCategory.title)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-[#F8F6F0] dark:bg-[#111111] hover:bg-black/5 transition-colors" title="Edit Category"><Pencil size={18} /></button>
@@ -444,6 +549,7 @@ export default function CustomAdminDashboard() {
                   </div>
                 )}
               </div>
+
               
               {activeCategory._id !== 'all' && (
                 <div className={`w-full h-64 border-2 border-dashed ${uploadSuccess ? 'border-green-500 bg-green-500/5' : 'border-black/20 dark:border-white/20 bg-[#F8F6F0] dark:bg-[#111111]'} rounded-[24px] flex flex-col items-center justify-center cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors relative overflow-hidden group`}>
@@ -504,15 +610,30 @@ export default function CustomAdminDashboard() {
                     </div>
                   ) : (
                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
-                    {activeCategoryImages.map((img, i) => (
+                    {activeCategoryImages.map((img, i) => {
+                      const displayPrice = img.price || (activeCategory?._id !== 'all' ? activeCategory?.price : img.categoryPrice);
+                      const displaySizes = normalizeSizes((img.sizes && img.sizes.length > 0) 
+                        ? img.sizes 
+                        : (activeCategory?._id !== 'all' ? activeCategory?.sizes : img.categorySizes));
+                      return (
                       <button 
                         key={img._key || i} 
                         onClick={() => openModal('image', img)}
-                        className="group relative aspect-[4/5] rounded-xl overflow-hidden bg-[#E5E3DC] dark:bg-[#222] border-none outline-none block w-full cursor-pointer hover:ring-2 hover:ring-black dark:hover:ring-white transition-all"
+                        className="group relative aspect-[4/5] rounded-xl overflow-hidden bg-[#E5E3DC] dark:bg-[#222] border-none outline-none block w-full cursor-pointer hover:ring-2 hover:ring-black dark:hover:ring-white transition-all text-left"
                       >
                         <img src={img.url} alt="Product" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                        <div className="absolute bottom-2 left-2 right-2 flex justify-between items-center pointer-events-none gap-1">
+                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-md text-white shadow-sm shrink-0">
+                            {displayPrice ? `₹${displayPrice}` : 'No price'}
+                          </span>
+                          {displaySizes && displaySizes.length > 0 && (
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-white/80 dark:bg-black/80 backdrop-blur-md text-[#111] dark:text-white shadow-sm truncate">
+                              {displaySizes.join(', ')}
+                            </span>
+                          )}
+                        </div>
                       </button>
-                    ))}
+                    )})}
                   </div>
                   )}
                 </div>
@@ -544,8 +665,24 @@ export default function CustomAdminDashboard() {
                   type="text" 
                   value={newCategoryName}
                   onChange={(e) => setNewCategoryName(e.target.value)}
-                  placeholder="e.g., Summer Collection"
-                  className="w-full h-14 bg-[#F8F6F0] dark:bg-[#111111] rounded-2xl px-4 font-bold text-[15px] border-none outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
+                  placeholder="Category Name (e.g., Baggy Jeans)"
+                  className="w-full h-14 bg-[#F8F6F0] dark:bg-[#111111] rounded-2xl px-4 font-bold text-[15px] border-none outline-none focus:ring-2 focus:ring-black dark:focus:ring-white text-[#111111] dark:text-[#EBEBEB]"
+                />
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-[#666] dark:text-[#999] text-[15px]">₹</span>
+                  <input 
+                    type="number" 
+                    min="0"
+                    value={newCategoryPrice}
+                    onChange={(e) => setNewCategoryPrice(e.target.value)}
+                    placeholder="Default Price (Optional)"
+                    className="w-full h-14 bg-[#F8F6F0] dark:bg-[#111111] rounded-2xl pl-9 pr-4 font-bold text-[15px] border-none outline-none focus:ring-2 focus:ring-black dark:focus:ring-white text-[#111111] dark:text-[#EBEBEB]"
+                  />
+                </div>
+                <SizeTagEditor
+                  sizes={newCategorySizes}
+                  onChange={setNewCategorySizes}
+                  label="Default Category Sizes"
                 />
                 <button 
                   type="submit" 
@@ -562,7 +699,7 @@ export default function CustomAdminDashboard() {
         {/* Edit Category Modal */}
         {isEditingCategory && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-[#1A1A1A] rounded-[32px] p-8 w-full max-w-sm shadow-2xl relative">
+            <div className="bg-white dark:bg-[#1A1A1A] rounded-[32px] p-8 w-full max-w-md shadow-2xl relative">
               <button 
                 type="button"
                 onClick={() => closeModal()}
@@ -577,8 +714,24 @@ export default function CustomAdminDashboard() {
                   type="text" 
                   value={editCategoryName}
                   onChange={(e) => setEditCategoryName(e.target.value)}
-                  placeholder="e.g., Summer Collection"
-                  className="w-full h-14 bg-[#F8F6F0] dark:bg-[#111111] rounded-2xl px-4 font-bold text-[15px] border-none outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
+                  placeholder="Category Name"
+                  className="w-full h-14 bg-[#F8F6F0] dark:bg-[#111111] rounded-2xl px-4 font-bold text-[15px] border-none outline-none focus:ring-2 focus:ring-black dark:focus:ring-white text-[#111111] dark:text-[#EBEBEB]"
+                />
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-[#666] dark:text-[#999] text-[15px]">₹</span>
+                  <input 
+                    type="number" 
+                    min="0"
+                    value={editCategoryPrice}
+                    onChange={(e) => setEditCategoryPrice(e.target.value)}
+                    placeholder="Default Price (Optional)"
+                    className="w-full h-14 bg-[#F8F6F0] dark:bg-[#111111] rounded-2xl pl-9 pr-4 font-bold text-[15px] border-none outline-none focus:ring-2 focus:ring-black dark:focus:ring-white text-[#111111] dark:text-[#EBEBEB]"
+                  />
+                </div>
+                <SizeTagEditor
+                  sizes={editCategorySizes}
+                  onChange={setEditCategorySizes}
+                  label="Default Category Sizes"
                 />
                 <button 
                   type="submit" 
@@ -602,22 +755,63 @@ export default function CustomAdminDashboard() {
             >
               <X size={24} />
             </button>
-            <div className="w-full max-w-4xl max-h-[75vh] flex-1 mb-8">
+            <div className="w-full max-w-4xl max-h-[60vh] flex-1 mb-4 flex items-center justify-center">
               <img src={selectedImage.url} alt="Selected Product" className="w-full h-full object-contain drop-shadow-2xl" />
             </div>
-            <button 
-              type="button"
-              onClick={() => {
-                handleDeleteImage(selectedImage._key, selectedImage.categoryId);
-                closeModal();
-              }}
-              className="h-14 px-8 rounded-full bg-red-600 text-white font-bold text-[16px] flex items-center justify-center gap-2 hover:bg-red-700 transition-colors shadow-lg"
-            >
-              <Trash2 size={20} />
-              Delete this Image
-            </button>
+
+            {/* Price & Size Edit Actions */}
+            <div className="w-full max-w-md bg-white dark:bg-[#1A1A1A] p-5 rounded-3xl shadow-2xl flex flex-col gap-4 border border-black/10 dark:border-white/10 max-h-[85vh] overflow-y-auto">
+              <div className="flex flex-col gap-3">
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-[#666] dark:text-[#999] text-[15px]">₹</span>
+                  <input 
+                    type="number"
+                    min="0"
+                    value={imagePriceInput}
+                    onChange={(e) => setImagePriceInput(e.target.value)}
+                    placeholder={
+                      selectedImage.categoryPrice || (activeCategory?.price && activeCategory._id !== 'all')
+                        ? `Price (Default: ₹${selectedImage.categoryPrice || activeCategory?.price})`
+                        : "Enter Price (₹)"
+                    }
+                    className="w-full h-12 bg-[#F8F6F0] dark:bg-[#111111] rounded-2xl pl-9 pr-4 font-bold text-[15px] border-none outline-none focus:ring-2 focus:ring-black dark:focus:ring-white text-[#111111] dark:text-[#EBEBEB]"
+                  />
+                </div>
+
+                <SizeTagEditor
+                  sizes={imageSizes}
+                  onChange={setImageSizes}
+                  defaultCategorySizes={normalizeSizes(selectedImage.categorySizes || activeCategory?.sizes)}
+                  label="Item Sizes"
+                />
+
+                <button
+                  type="button"
+                  onClick={handleSaveImageDetails}
+                  disabled={isSavingPrice}
+                  className="h-12 w-full rounded-2xl bg-[#111111] dark:bg-[#F8F6F0] text-white dark:text-[#111111] font-bold text-[14px] flex items-center justify-center hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  {isSavingPrice ? <Loader2 size={16} className="animate-spin" /> : 'Save Item Changes'}
+                </button>
+              </div>
+
+              <button 
+                type="button"
+                onClick={() => {
+                  handleDeleteImage(selectedImage._key, selectedImage.categoryId);
+                  setSelectedImage(null);
+                  closeModal();
+                }}
+                className="h-11 w-full rounded-2xl bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 font-bold text-[13px] flex items-center justify-center gap-2 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors"
+              >
+                <Trash2 size={16} />
+                Delete this Image
+              </button>
+            </div>
           </div>
         )}
+
+
 
         {/* Delete Category Modal */}
         {isDeleteCategoryOpen && activeCategory && (

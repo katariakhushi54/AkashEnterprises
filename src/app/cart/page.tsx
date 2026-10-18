@@ -16,7 +16,7 @@ function SharedCartContent() {
   
   const [allProducts, setAllProducts] = useState<Product[]>(fallbackProducts);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedItem, setSelectedItem] = useState<{product: { id: string, name: string, price: number, imageUrl: string, category: string }, quantity: number, idx: number} | null>(null);
+  const [selectedItem, setSelectedItem] = useState<{ product: Product; quantity: number; idx: number } | null>(null);
   
   useModalHistory(!!selectedItem, () => setSelectedItem(null), 'sharedCartItemImage');
 
@@ -34,14 +34,25 @@ function SharedCartContent() {
     loadData();
   }, []);
 
-  const sharedItems = itemsParam
-    ? itemsParam.split(",").map((str) => {
+  const sharedItems: { product: Product; quantity: number }[] = itemsParam
+    ? itemsParam.split(",").flatMap((str) => {
         const parts = str.split("-");
-        const id = parts.slice(0, -1).join("-");
+        const rawId = parts.slice(0, -1).join("-");
+        let id = rawId;
+        let selectedSize: string | undefined = undefined;
+        if (rawId.includes("~")) {
+          const [baseId, size] = rawId.split("~");
+          id = baseId;
+          selectedSize = size;
+        }
         const quantity = parseInt(parts[parts.length - 1] || "1", 10);
         const product = allProducts.find((p) => p.id === id);
-        return { product, quantity };
-      }).filter((item): item is { product: Product, quantity: number } => item.product !== undefined)
+        if (!product) return [];
+        return [{ 
+          product: { ...product, selectedSize }, 
+          quantity 
+        }];
+      })
     : [];
 
   return (
@@ -75,14 +86,14 @@ function SharedCartContent() {
             <div className="flex flex-col gap-3">
               {sharedItems.map(({ product, quantity }, idx) => (
                 <div key={idx} className="flex items-center justify-between gap-4 bg-[#E5E3DC]/30 dark:bg-[#222]/30 p-3 rounded-2xl border border-black/5 dark:border-white/5 shadow-sm">
-                  <div className="flex items-center gap-3">
-                    <span className="text-[15px] font-bold text-[#999999] dark:text-[#666666] w-5 text-right font-sans">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <span className="text-[15px] font-bold text-[#999999] dark:text-[#666666] w-5 text-right font-sans shrink-0">
                       {idx + 1}.
                     </span>
                     <motion.div 
                       layoutId={`shared-image-${idx}`}
                       onClick={() => setSelectedItem({ product: product!, quantity, idx })}
-                      className="relative w-20 h-24 shrink-0 rounded-[12px] overflow-hidden bg-[#E5E3DC] dark:bg-[#222] cursor-pointer"
+                      className="relative w-16 h-20 sm:w-20 sm:h-24 shrink-0 rounded-[12px] overflow-hidden bg-[#E5E3DC] dark:bg-[#222] cursor-pointer"
                     >
                       <img
                         src={product?.imageUrl}
@@ -90,16 +101,46 @@ function SharedCartContent() {
                         className="w-full h-full object-cover"
                       />
                     </motion.div>
+                    <div className="flex flex-col min-w-0 px-2 justify-center">
+                      <p className="text-[13px] sm:text-[14px] font-bold text-[#111111] dark:text-[#EBEBEB] truncate">
+                        {product?.category || product?.name}
+                      </p>
+                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                        {product?.selectedSize && (
+                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-[#111111]/10 dark:bg-white/10 text-[#111111] dark:text-[#EBEBEB]">
+                            Size: {product.selectedSize}
+                          </span>
+                        )}
+                        {product && product.price > 0 && (
+                          <span className="text-[13px] sm:text-[14px] font-extrabold text-[#111111] dark:text-[#F8F6F0]">
+                            ₹{product.price.toLocaleString('en-IN')} {quantity > 1 ? `× ${quantity} = ₹${(product.price * quantity).toLocaleString('en-IN')}` : ''}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                   
-                  <div className="flex items-center justify-center bg-[#111111] dark:bg-[#F8F6F0] rounded-xl h-10 px-5 shrink-0 shadow-lg">
-                    <span className="text-[15px] font-bold text-white dark:text-[#111111]">
+                  <div className="flex items-center justify-center bg-[#111111] dark:bg-[#F8F6F0] rounded-xl h-10 px-4 shrink-0 shadow-lg">
+                    <span className="text-[14px] font-bold text-white dark:text-[#111111]">
                       Qty: {quantity}
                     </span>
                   </div>
                 </div>
               ))}
             </div>
+
+
+            {(() => {
+              const sharedTotal = sharedItems.reduce((acc, item) => acc + (item.product.price || 0) * item.quantity, 0);
+              return sharedTotal > 0 ? (
+                <div className="mt-6 pt-5 border-t border-black/5 dark:border-white/10 flex items-center justify-between px-2">
+                  <span className="text-[15px] font-medium text-[#777] dark:text-[#999]">Total Order Value</span>
+                  <span className="text-[22px] font-extrabold text-[#111111] dark:text-[#F8F6F0]">
+                    ₹{sharedTotal.toLocaleString('en-IN')}
+                  </span>
+                </div>
+              ) : null;
+            })()}
           </div>
         )}
       </div>
@@ -123,8 +164,15 @@ function SharedCartContent() {
               >
                 <img src={selectedItem.product.imageUrl} alt="Popup Item" className="w-full h-auto max-h-[72vh] object-contain block" />
                 
-                <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md text-white text-[14px] font-bold px-3 py-1.5 rounded-full shadow-lg">
-                  x{selectedItem.quantity}
+                <div className="absolute top-4 left-4 flex items-center gap-2">
+                  <div className="bg-black/60 backdrop-blur-md text-white text-[14px] font-bold px-3 py-1.5 rounded-full shadow-lg">
+                    x{selectedItem.quantity}
+                  </div>
+                  {selectedItem.product.selectedSize && (
+                    <div className="bg-white/90 text-[#111] dark:bg-black/80 dark:text-white backdrop-blur-md text-[13px] font-bold px-3 py-1.5 rounded-full shadow-lg">
+                      Size: {selectedItem.product.selectedSize}
+                    </div>
+                  )}
                 </div>
                 <motion.button
                   initial={{ opacity: 0, scale: 0.8 }}

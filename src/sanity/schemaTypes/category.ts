@@ -22,6 +22,20 @@ export const categoryType = defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: 'price',
+      title: 'Default Price (₹)',
+      type: 'number',
+    }),
+    defineField({
+      name: 'sizes',
+      title: 'Default Sizes for Category',
+      type: 'array',
+      of: [{ type: 'string' }],
+      options: {
+        layout: 'tags',
+      },
+    }),
+    defineField({
       name: 'products',
       title: 'Bulk Upload Photos',
       description: 'Drag and drop as many photos as you want here. You can also reorder them by dragging.',
@@ -34,6 +48,15 @@ export const categoryType = defineType({
               name: 'price',
               type: 'number',
               title: 'Price (Optional)',
+            },
+            {
+              name: 'sizes',
+              title: 'Sizes (Optional)',
+              type: 'array',
+              of: [{ type: 'string' }],
+              options: {
+                layout: 'tags',
+              },
             }
           ],
           options: {

@@ -119,7 +119,14 @@ export function CartSheet() {
     const baseUrl = isLocal ? 'https://akashenterprises.vercel.app' : window.location.origin;
     const cartUrl = `${baseUrl}/cart?items=${itemIds}&name=${encodeURIComponent(customerName.trim())}`;
     
-    const message = `Hello Akash Enterprises! I would like to place an order.\n\nMy Name: ${customerName.trim()}\n\nHere is my cart: ${cartUrl}`;
+    const itemsList = items.map((i, idx) => {
+      const sizeText = i.selectedSize ? ` (Size: ${i.selectedSize})` : '';
+      const priceText = i.price > 0 ? ` - ₹${i.price}` : '';
+      return `${idx + 1}. ${i.category || i.name}${sizeText} x ${i.quantity}${priceText}`;
+    }).join("\n");
+
+    const totalText = totalAmount > 0 ? `\n\nTotal: ₹${totalAmount.toLocaleString('en-IN')}` : '';
+    const message = `Hello Akash Enterprises! I would like to place an order.\n\nMy Name: ${customerName.trim()}\n\nItems:\n${itemsList}${totalText}\n\nCart Link: ${cartUrl}`;
     const whatsappUrl = `https://wa.me/918390005505?text=${encodeURIComponent(message)}`;
     
     window.open(whatsappUrl, '_blank');
@@ -163,7 +170,21 @@ export function CartSheet() {
                       </motion.div>
                     </div>
                     
-                    <div className="flex-1" />
+                    <div className="flex-1 min-w-0 px-2 flex flex-col justify-center">
+                      <p className="text-[13px] font-bold text-[#111111] dark:text-[#EBEBEB] truncate">
+                        {item.category || item.name}
+                      </p>
+                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                        {item.selectedSize && (
+                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-[#111111]/10 dark:bg-white/10 text-[#111111] dark:text-[#EBEBEB]">
+                            Size: {item.selectedSize}
+                          </span>
+                        )}
+                        <span className="text-[13px] font-extrabold text-[#111111] dark:text-[#F8F6F0]">
+                          {item.price > 0 ? `₹${item.price.toLocaleString('en-IN')}` : 'Price on Request'}
+                        </span>
+                      </div>
+                    </div>
                     
                     <div className="flex items-center shrink-0">
                       <button 
@@ -223,23 +244,33 @@ export function CartSheet() {
           )}
 
           {items.length > 0 && (
-            <div className="p-6 bg-[#F8F6F0] dark:bg-[#111111] border-t border-black/5 dark:border-white/10 transition-colors duration-300 relative z-40 flex items-center gap-3">
-              <button 
-                onClick={() => setIsClearCartModalOpen(true)}
-                className="h-14 px-5 sm:px-6 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-600 font-bold text-[14px] sm:text-[15px] transition-colors border-none outline-none focus:outline-none shrink-0 flex items-center gap-2"
-              >
-                <Trash2 size={18} />
-                Clear
-              </button>
-              
-              <button 
-                className="flex-1 h-14 rounded-full bg-[#111111] dark:bg-[#F8F6F0] hover:bg-black dark:hover:bg-white text-white dark:text-[#111111] font-bold text-[15px] font-sans flex items-center justify-center gap-2 border-none outline-none focus:outline-none transition-colors"
-                onClick={handleShareCart}
-                style={{ border: 'none', boxShadow: 'none' }}
-              >
-                <Send className="mr-2 h-4 w-4" />
-                Share Cart
-              </button>
+            <div className="p-6 bg-[#F8F6F0] dark:bg-[#111111] border-t border-black/5 dark:border-white/10 transition-colors duration-300 relative z-40 flex flex-col gap-4">
+              {totalAmount > 0 && (
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-[14px] font-medium text-[#777] dark:text-[#999]">Estimated Total</span>
+                  <span className="text-[20px] font-extrabold text-[#111111] dark:text-[#F8F6F0]">
+                    ₹{totalAmount.toLocaleString('en-IN')}
+                  </span>
+                </div>
+              )}
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => setIsClearCartModalOpen(true)}
+                  className="h-14 px-5 sm:px-6 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-600 font-bold text-[14px] sm:text-[15px] transition-colors border-none outline-none focus:outline-none shrink-0 flex items-center gap-2"
+                >
+                  <Trash2 size={18} />
+                  Clear
+                </button>
+                
+                <button 
+                  className="flex-1 h-14 rounded-full bg-[#111111] dark:bg-[#F8F6F0] hover:bg-black dark:hover:bg-white text-white dark:text-[#111111] font-bold text-[15px] font-sans flex items-center justify-center gap-2 border-none outline-none focus:outline-none transition-colors"
+                  onClick={handleShareCart}
+                  style={{ border: 'none', boxShadow: 'none' }}
+                >
+                  <Send className="mr-2 h-4 w-4" />
+                  Share Cart
+                </button>
+              </div>
             </div>
           )}
         </SheetContent>

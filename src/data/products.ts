@@ -4,9 +4,12 @@ export interface Product {
   price: number;
   category: string;
   imageUrl: string;
+  sizes?: string[];
+  selectedSize?: string;
   colors?: string[];
   originalPrice?: number;
 }
+
 
 export const products: Product[] = [
   {

@@ -9,7 +9,7 @@ import { Loader2 } from "lucide-react";
 
 export default function CollectionPage() {
   const [categories, setCategories] = useState<string[]>(["All"]);
-  const [products, setProducts] = useState<{ id: string, name: string, price: number, category: string, imageUrl: string, description: string }[]>([]);
+  const [products, setProducts] = useState<{ id: string, name: string, price: number, category: string, imageUrl: string, sizes?: string[], description: string }[]>([]);
   const [activeCategory, setActiveCategory] = useState("All");
   const [isLoading, setIsLoading] = useState(true);
 
@@ -39,21 +39,22 @@ export default function CollectionPage() {
         
         {/* Filter Chips */}
         <div className="flex overflow-x-auto no-scrollbar gap-2 mb-6 pb-2 -mx-4 px-4 items-center">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              className="shrink-0 px-4 py-2 rounded-full text-[13px] md:text-[14px] font-sans font-medium transition-colors focus:outline-none flex items-center justify-center dark:!bg-[#222] dark:!text-[#EBEBEB] dark:hover:!bg-[#333]"
-              style={{
-                background: activeCategory === cat ? '#111111' : '#E5E3DC',
-                color: activeCategory === cat ? '#ffffff' : '#111111',
-                border: 'none',
-                outline: 'none'
-              }}
-            >
-              {cat}
-            </button>
-          ))}
+          {categories.map((cat) => {
+            const isActive = activeCategory === cat;
+            return (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`shrink-0 px-4 py-2 rounded-full text-[13px] md:text-[14px] font-sans transition-all duration-200 focus:outline-none flex items-center justify-center cursor-pointer border-none ${
+                  isActive
+                    ? 'bg-[#111111] text-white dark:bg-[#F8F6F0] dark:text-[#111111] font-bold shadow-sm scale-[1.02]'
+                    : 'bg-[#E5E3DC] text-[#444] hover:bg-[#DCDAD2] hover:text-[#111] dark:bg-[#222222] dark:text-[#888] dark:hover:bg-[#2A2A2A] dark:hover:text-[#EBEBEB] font-medium'
+                }`}
+              >
+                {cat}
+              </button>
+            );
+          })}
         </div>
 
         {isLoading ? (

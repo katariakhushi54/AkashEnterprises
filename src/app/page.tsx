@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { ProductCard } from "@/components/product/ProductCard";
 // import { CartSheet } from "@/components/cart/CartSheet";
 import { Header } from "@/components/layout/Header";
@@ -37,6 +37,18 @@ export default function CollectionPage() {
     return counts;
   }, [products]);
 
+  const activeChipRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (activeChipRef.current) {
+      activeChipRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "center",
+      });
+    }
+  }, [activeCategory]);
+
   const filteredProducts = activeCategory === "All" 
     ? products 
     : products.filter(p => p.category === activeCategory);
@@ -50,27 +62,32 @@ export default function CollectionPage() {
         categoryCounts={categoryCounts}
       />
 
-      <div className="mx-auto w-full max-w-lg md:max-w-xl px-4 md:px-8 pt-6 flex-1">
-        
-        {/* Filter Chips */}
-        <div className="flex overflow-x-auto no-scrollbar gap-2 mb-6 pb-2 -mx-4 px-4 items-center">
-          {categories.map((cat) => {
-            const isActive = activeCategory === cat;
-            return (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`shrink-0 px-4 py-2 rounded-full text-[13px] md:text-[14px] font-sans transition-all duration-200 focus:outline-none flex items-center justify-center cursor-pointer border-none ${
-                  isActive
-                    ? 'bg-[#111111] text-white dark:bg-[#F8F6F0] dark:text-[#111111] font-bold shadow-sm scale-[1.02]'
-                    : 'bg-[#E5E3DC] text-[#444] hover:bg-[#DCDAD2] hover:text-[#111] dark:bg-[#222222] dark:text-[#888] dark:hover:bg-[#2A2A2A] dark:hover:text-[#EBEBEB] font-medium'
-                }`}
-              >
-                {cat}
-              </button>
-            );
-          })}
+      {/* Sticky Filter Chips Bar */}
+      <div className="sticky top-16 md:top-20 z-30 w-full bg-[#F8F6F0] dark:bg-[#111111] border-b border-black/5 dark:border-white/10 transition-colors duration-300">
+        <div className="mx-auto w-full max-w-lg md:max-w-xl px-4 md:px-8 py-2.5">
+          <div className="flex overflow-x-auto no-scrollbar gap-2 items-center">
+            {categories.map((cat) => {
+              const isActive = activeCategory === cat;
+              return (
+                <button
+                  key={cat}
+                  ref={isActive ? activeChipRef : null}
+                  onClick={() => setActiveCategory(cat)}
+                  className={`shrink-0 px-4 py-2 rounded-full text-[13px] md:text-[14px] font-sans transition-all duration-200 focus:outline-none flex items-center justify-center cursor-pointer border-none ${
+                    isActive
+                      ? 'bg-[#111111] text-white dark:bg-[#F8F6F0] dark:text-[#111111] font-bold shadow-sm scale-[1.02]'
+                      : 'bg-[#E5E3DC] text-[#444] hover:bg-[#DCDAD2] hover:text-[#111] dark:bg-[#222222] dark:text-[#888] dark:hover:bg-[#2A2A2A] dark:hover:text-[#EBEBEB] font-medium'
+                  }`}
+                >
+                  {cat}
+                </button>
+              );
+            })}
+          </div>
         </div>
+      </div>
+
+      <div className="mx-auto w-full max-w-lg md:max-w-xl px-4 md:px-8 pt-5 flex-1">
 
         {isLoading ? (
           <div className="flex flex-col items-center justify-center pt-20">

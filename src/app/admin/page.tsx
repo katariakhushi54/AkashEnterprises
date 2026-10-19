@@ -798,7 +798,7 @@ export default function CustomAdminDashboard() {
         {/* Add Category Modal */}
         {isAddingCategory && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-[#1A1A1A] rounded-[32px] p-8 w-full max-w-sm shadow-2xl relative">
+            <div className="bg-white dark:bg-[#1A1A1A] rounded-[32px] p-6 sm:p-8 w-full max-w-md sm:max-w-lg shadow-2xl relative">
               <button 
                 type="button"
                 onClick={() => closeModal()}
@@ -855,7 +855,7 @@ export default function CustomAdminDashboard() {
         {/* Edit Category Modal */}
         {isEditingCategory && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-[#1A1A1A] rounded-[32px] p-8 w-full max-w-md shadow-2xl relative">
+            <div className="bg-white dark:bg-[#1A1A1A] rounded-[32px] p-6 sm:p-8 w-full max-w-md sm:max-w-lg shadow-2xl relative">
               <button 
                 type="button"
                 onClick={() => closeModal()}
@@ -924,7 +924,7 @@ export default function CustomAdminDashboard() {
             </div>
 
             {/* Price & Size Edit Actions */}
-            <div className="w-full max-w-md bg-white dark:bg-[#1A1A1A] p-5 rounded-3xl shadow-2xl flex flex-col gap-4 border border-black/10 dark:border-white/10 max-h-[85vh] overflow-y-auto">
+            <div className="w-full max-w-md sm:max-w-lg bg-white dark:bg-[#1A1A1A] p-5 sm:p-6 rounded-3xl shadow-2xl flex flex-col gap-4 border border-black/10 dark:border-white/10 max-h-[85vh] overflow-y-auto">
               <div className="flex flex-col gap-3">
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-[#666] dark:text-[#999] text-[15px]">₹</span>

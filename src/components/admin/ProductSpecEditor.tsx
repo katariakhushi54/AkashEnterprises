@@ -327,58 +327,58 @@ export function ProductSpecEditor({
           </div>
 
           {sizes.length > 0 ? (
-            /* Linked Per-Size Measurements Grid */
-            <div className="flex flex-col gap-2.5 bg-[#F8F6F0]/80 dark:bg-[#111111]/80 p-3 rounded-2xl border border-black/5 dark:border-white/5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-1">
+            /* Linked Per-Size Measurements Clean Table */
+            <div className="flex flex-col gap-2 bg-[#F8F6F0]/80 dark:bg-[#111111]/80 p-3 rounded-2xl border border-black/5 dark:border-white/5">
+              {/* Column Headers */}
+              <div className="grid grid-cols-[1fr_100px_100px] sm:grid-cols-[1fr_116px_116px] items-center gap-2 px-3 text-[10px] font-bold uppercase tracking-wider text-[#777] dark:text-[#888]">
+                <span>Size</span>
+                <span className="text-center">Bottom Width</span>
+                <span className="text-center">Length</span>
+              </div>
+
+              {/* Rows */}
+              <div className="flex flex-col gap-1.5 max-h-60 overflow-y-auto pr-1">
                 {sizes.map((size) => {
                   const currentWidth = sizeBottomWidths[size] || '';
                   const currentLength = sizeLengths[size] || '';
                   return (
                     <div
                       key={size}
-                      className="flex items-center justify-between gap-2 bg-white dark:bg-[#1A1A1A] px-3 py-2 rounded-xl border border-black/5 dark:border-white/5 shadow-xs"
+                      className="grid grid-cols-[1fr_100px_100px] sm:grid-cols-[1fr_116px_116px] items-center gap-2 bg-white dark:bg-[#1A1A1A] px-3 py-2 rounded-xl border border-black/5 dark:border-white/5 shadow-xs"
                     >
-                      <span className="font-bold text-[13px] text-[#111] dark:text-[#F8F6F0] w-12 shrink-0">
+                      <span className="font-bold text-[13px] text-[#111] dark:text-[#F8F6F0]">
                         Size {size}
                       </span>
 
-                      <div className="flex items-center gap-1.5 flex-1 justify-end">
-                        {/* Bottom Width Input */}
-                        <div className="flex items-center gap-1">
-                          <span className="text-[10px] font-bold uppercase text-[#888]">B:</span>
-                          <input
-                            type="text"
-                            value={currentWidth}
-                            onChange={(e) => handleIndividualWidthChange(size, e.target.value)}
-                            placeholder='20"'
-                            className="w-14 h-7 text-center font-bold text-[12px] bg-[#F8F6F0] dark:bg-[#111111] rounded-lg border-none outline-none focus:ring-1 focus:ring-black dark:focus:ring-white text-[#111111] dark:text-[#EBEBEB]"
-                          />
-                        </div>
+                      {/* Bottom Width Input */}
+                      <input
+                        type="text"
+                        value={currentWidth}
+                        onChange={(e) => handleIndividualWidthChange(size, e.target.value)}
+                        placeholder='20"'
+                        className="w-full h-8 text-center font-bold text-[13px] bg-[#F8F6F0] dark:bg-[#111111] rounded-lg border border-black/10 dark:border-white/10 outline-none focus:ring-1 focus:ring-black dark:focus:ring-white text-[#111111] dark:text-[#EBEBEB] transition-all"
+                      />
 
-                        {/* Length Input */}
-                        <div className="flex items-center gap-1">
-                          <span className="text-[10px] font-bold uppercase text-[#888]">L:</span>
-                          <input
-                            type="text"
-                            value={currentLength}
-                            onChange={(e) => handleIndividualLengthChange(size, e.target.value)}
-                            placeholder='40"'
-                            className="w-14 h-7 text-center font-bold text-[12px] bg-[#F8F6F0] dark:bg-[#111111] rounded-lg border-none outline-none focus:ring-1 focus:ring-black dark:focus:ring-white text-[#111111] dark:text-[#EBEBEB]"
-                          />
-                        </div>
-                      </div>
+                      {/* Length Input */}
+                      <input
+                        type="text"
+                        value={currentLength}
+                        onChange={(e) => handleIndividualLengthChange(size, e.target.value)}
+                        placeholder='40"'
+                        className="w-full h-8 text-center font-bold text-[13px] bg-[#F8F6F0] dark:bg-[#111111] rounded-lg border border-black/10 dark:border-white/10 outline-none focus:ring-1 focus:ring-black dark:focus:ring-white text-[#111111] dark:text-[#EBEBEB] transition-all"
+                      />
                     </div>
                   );
                 })}
               </div>
 
               {/* Live Summary Footer */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-1 border-t border-black/5 dark:border-white/5 text-[11px] gap-1">
+              <div className="flex flex-wrap items-center justify-between pt-2 border-t border-black/5 dark:border-white/5 text-[11px] gap-2">
                 <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
                   <Check size={12} strokeWidth={2.5} />
                   {configuredCount}/{sizes.length} sizes configured
                 </span>
-                <div className="flex items-center gap-2 font-bold text-[#666] dark:text-[#AAA]">
+                <div className="flex items-center gap-2 font-bold text-[#666] dark:text-[#AAA] flex-wrap">
                   {bottomWidth && <span>Bottom: {bottomWidth}</span>}
                   {bottomWidth && length && <span>•</span>}
                   {length && <span>Length: {length}</span>}

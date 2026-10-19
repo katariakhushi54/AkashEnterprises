@@ -1,12 +1,13 @@
 "use client";
 
-import { Search, ShoppingBag, Sun, Moon } from "lucide-react";
-import { useCartStore } from "@/store/useCartStore";
+import { Sun, Moon } from "lucide-react";
+// import { ShoppingBag } from "lucide-react";
+// import { useCartStore } from "@/store/useCartStore";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 
 export function Header() {
-  const totalItems = useCartStore((state) => state.totalItems);
+  // const totalItems = useCartStore((state) => state.totalItems);
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
@@ -42,9 +43,9 @@ export function Header() {
           </Link>
         </div>
         
-        {/* Right: Cart */}
+        {/* Right: Cart (commented out per client request) */}
         <div className="flex items-center gap-3">
-          <button 
+          {/* <button 
             className="p-1 text-[#111111] dark:text-[#F8F6F0] transition-colors relative bg-transparent border-none outline-none focus:outline-none flex items-center justify-center"
             style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}
             onClick={() => {
@@ -57,7 +58,8 @@ export function Header() {
                 {totalItems}
               </span>
             )}
-          </button>
+          </button> */}
+          <div className="w-[22px] h-[22px]" />
         </div>
       </div>
     </header>

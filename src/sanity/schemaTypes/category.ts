@@ -36,6 +36,27 @@ export const categoryType = defineType({
       },
     }),
     defineField({
+      name: 'bottomWidth',
+      title: 'Default Bottom Width (e.g. 20", 22", 18-20")',
+      description: 'Bottom width / leg opening for pants',
+      type: 'string',
+    }),
+    defineField({
+      name: 'sizeBottomWidths',
+      title: 'Default Size to Bottom Width Mapping',
+      description: 'Optional per-size bottom width mapping (e.g. 28: 18", 30: 19")',
+      type: 'array',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            { name: 'size', type: 'string', title: 'Size' },
+            { name: 'bottomWidth', type: 'string', title: 'Bottom Width' },
+          ],
+        },
+      ],
+    }),
+    defineField({
       name: 'products',
       title: 'Bulk Upload Photos',
       description: 'Drag and drop as many photos as you want here. You can also reorder them by dragging.',
@@ -57,6 +78,25 @@ export const categoryType = defineType({
               options: {
                 layout: 'tags',
               },
+            },
+            {
+              name: 'bottomWidth',
+              title: 'Bottom Width (Optional, e.g. 20", 22")',
+              type: 'string',
+            },
+            {
+              name: 'sizeBottomWidths',
+              title: 'Size to Bottom Width Mapping (Optional)',
+              type: 'array',
+              of: [
+                {
+                  type: 'object',
+                  fields: [
+                    { name: 'size', type: 'string', title: 'Size' },
+                    { name: 'bottomWidth', type: 'string', title: 'Bottom Width' },
+                  ],
+                },
+              ],
             }
           ],
           options: {

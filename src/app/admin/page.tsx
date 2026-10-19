@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { Upload, Plus, Image as ImageIcon, LogIn, Loader2, X, CheckCircle2, Pencil, Trash2, AlertCircle } from 'lucide-react';
-import { getCategories, createCategory, uploadAsset, addAssetsToCategory, getCategoryImages, getAllImages, updateCategory, deleteCategory, clearCategoryImages, deleteCategoryImage, updateImagePrice, updateImageSizes, setCategoryPrice, loginAdmin, logoutAdmin, checkAdminAuth } from './actions';
+import { getCategories, createCategory, uploadAsset, addAssetsToCategory, getCategoryImages, getAllImages, updateCategory, deleteCategory, clearCategoryImages, deleteCategoryImage, updateImagePrice, updateImageSizes, updateImageBottomWidth, updateImageSizeBottomWidths, setCategoryPrice, loginAdmin, logoutAdmin, checkAdminAuth } from './actions';
 import { normalizeSizes } from '@/lib/sizes';
 import { SizeTagEditor } from '@/components/admin/SizeTagEditor';
+import { SizeBottomWidthEditor } from '@/components/admin/SizeBottomWidthEditor';
 
 interface Category {
   _id?: string;
@@ -12,6 +13,8 @@ interface Category {
   title: string;
   price?: number;
   sizes?: string[];
+  bottomWidth?: string;
+  sizeBottomWidths?: { size: string; bottomWidth: string }[];
 }
 
 interface AdminImage {
@@ -20,8 +23,28 @@ interface AdminImage {
   categoryId?: string;
   price?: number;
   sizes?: string[];
+  bottomWidth?: string;
+  sizeBottomWidths?: { size: string; bottomWidth: string }[];
   categoryPrice?: number;
   categorySizes?: string[];
+  categoryBottomWidth?: string;
+  categorySizeBottomWidths?: { size: string; bottomWidth: string }[];
+}
+
+function arrayToMap(arr?: { size: string; bottomWidth: string }[]): Record<string, string> {
+  const map: Record<string, string> = {};
+  if (arr) {
+    arr.forEach(item => {
+      if (item.size && item.bottomWidth) map[item.size] = item.bottomWidth;
+    });
+  }
+  return map;
+}
+
+function mapToArray(map: Record<string, string>): { size: string; bottomWidth: string }[] {
+  return Object.entries(map)
+    .filter(([size, width]) => size.trim() && width.trim())
+    .map(([size, bottomWidth]) => ({ size: size.trim(), bottomWidth: bottomWidth.trim() }));
 }
 
 export default function CustomAdminDashboard() {
@@ -43,18 +66,30 @@ export default function CustomAdminDashboard() {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryPrice, setNewCategoryPrice] = useState('');
   const [newCategorySizes, setNewCategorySizes] = useState<string[]>([]);
+  const [newCategoryBottomWidth, setNewCategoryBottomWidth] = useState('');
+  const [newCategorySizeBottomWidths, setNewCategorySizeBottomWidths] = useState<Record<string, string>>({});
   const [isEditingCategory, setIsEditingCategory] = useState(false);
   const [editCategoryName, setEditCategoryName] = useState('');
   const [editCategoryPrice, setEditCategoryPrice] = useState('');
   const [editCategorySizes, setEditCategorySizes] = useState<string[]>([]);
+  const [editCategoryBottomWidth, setEditCategoryBottomWidth] = useState('');
+  const [editCategorySizeBottomWidths, setEditCategorySizeBottomWidths] = useState<Record<string, string>>({});
   const [isDeleteCategoryOpen, setIsDeleteCategoryOpen] = useState(false);
   const [isClearImagesOpen, setIsClearImagesOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<AdminImage | null>(null);
   const [imagePriceInput, setImagePriceInput] = useState('');
   const [imageSizes, setImageSizes] = useState<string[]>([]);
+  const [imageBottomWidth, setImageBottomWidth] = useState('');
+  const [imageSizeBottomWidths, setImageSizeBottomWidths] = useState<Record<string, string>>({});
   const [isSavingPrice, setIsSavingPrice] = useState(false);
 
-  const loadImages = async (categoryId: string, catPrice?: number, catSizes?: string[]) => {
+  const loadImages = async (
+    categoryId: string, 
+    catPrice?: number, 
+    catSizes?: string[], 
+    catBottomWidth?: string,
+    catSizeBottomWidths?: { size: string; bottomWidth: string }[]
+  ) => {
     setIsLoading(true);
     try {
       if (categoryId === 'all') {
@@ -66,7 +101,9 @@ export default function CustomAdminDashboard() {
           ...img, 
           categoryId,
           categoryPrice: catPrice !== undefined ? catPrice : activeCategory?.price,
-          categorySizes: catSizes !== undefined ? catSizes : activeCategory?.sizes
+          categorySizes: catSizes !== undefined ? catSizes : activeCategory?.sizes,
+          categoryBottomWidth: catBottomWidth !== undefined ? catBottomWidth : activeCategory?.bottomWidth,
+          categorySizeBottomWidths: catSizeBottomWidths !== undefined ? catSizeBottomWidths : activeCategory?.sizeBottomWidths
         })));
       }
     } catch (e) {
@@ -148,12 +185,16 @@ export default function CustomAdminDashboard() {
       setNewCategoryName('');
       setNewCategoryPrice('');
       setNewCategorySizes([]);
+      setNewCategoryBottomWidth('');
+      setNewCategorySizeBottomWidths({});
       setIsAddingCategory(true);
     }
     if (type === 'edit') {
       setEditCategoryName(activeCategory?.title || (typeof data === 'string' ? data : ''));
       setEditCategoryPrice(activeCategory?.price ? activeCategory.price.toString() : '');
       setEditCategorySizes(activeCategory?.sizes ? normalizeSizes(activeCategory.sizes) : []);
+      setEditCategoryBottomWidth(activeCategory?.bottomWidth || '');
+      setEditCategorySizeBottomWidths(arrayToMap(activeCategory?.sizeBottomWidths));
       setIsEditingCategory(true);
     }
     if (type === 'image') {
@@ -161,6 +202,8 @@ export default function CustomAdminDashboard() {
       setSelectedImage(img);
       setImagePriceInput(img.price ? img.price.toString() : '');
       setImageSizes(img.sizes ? normalizeSizes(img.sizes) : []);
+      setImageBottomWidth(img.bottomWidth || '');
+      setImageSizeBottomWidths(arrayToMap(img.sizeBottomWidths));
     }
     if (type === 'delete') setIsDeleteCategoryOpen(true);
     if (type === 'clear') setIsClearImagesOpen(true);
@@ -205,7 +248,7 @@ export default function CustomAdminDashboard() {
     setActiveCategory(cat);
     setActiveCategoryImages([]);
     setUploadSuccess(false);
-    loadImages(cat._id || cat.id || '', cat.price, cat.sizes);
+    loadImages(cat._id || cat.id || '', cat.price, cat.sizes, cat.bottomWidth, cat.sizeBottomWidths);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -244,12 +287,23 @@ export default function CustomAdminDashboard() {
     try {
       const parsedPrice = newCategoryPrice.trim() ? Number(newCategoryPrice.trim()) : undefined;
       const cleanSizes = newCategorySizes.length > 0 ? newCategorySizes : undefined;
-      const newCat = await createCategory(newCategoryName, parsedPrice, cleanSizes);
+      const cleanBottomWidth = newCategoryBottomWidth.trim() || undefined;
+      const cleanSizeBottomWidths = mapToArray(newCategorySizeBottomWidths);
+
+      const newCat = await createCategory(
+        newCategoryName, 
+        parsedPrice, 
+        cleanSizes, 
+        cleanBottomWidth,
+        cleanSizeBottomWidths.length > 0 ? cleanSizeBottomWidths : undefined
+      );
       setCategories([...categories, newCat]);
       handleSelectCategory(newCat);
       setNewCategoryName('');
       setNewCategoryPrice('');
       setNewCategorySizes([]);
+      setNewCategoryBottomWidth('');
+      setNewCategorySizeBottomWidths({});
       closeModal();
     } catch (e) {
       console.error(e);
@@ -268,13 +322,25 @@ export default function CustomAdminDashboard() {
       if (!catId) return;
       const parsedPrice = editCategoryPrice.trim() ? Number(editCategoryPrice.trim()) : null;
       const cleanSizes = editCategorySizes.length > 0 ? editCategorySizes : null;
-      await updateCategory(catId, editCategoryName, parsedPrice, cleanSizes);
+      const cleanBottomWidth = editCategoryBottomWidth.trim() || null;
+      const cleanSizeBottomWidths = mapToArray(editCategorySizeBottomWidths);
+
+      await updateCategory(
+        catId, 
+        editCategoryName, 
+        parsedPrice, 
+        cleanSizes, 
+        cleanBottomWidth,
+        cleanSizeBottomWidths.length > 0 ? cleanSizeBottomWidths : null
+      );
       
       const updatedCat: Category = { 
         ...activeCategory, 
         title: editCategoryName, 
         price: parsedPrice && parsedPrice > 0 ? parsedPrice : undefined,
-        sizes: cleanSizes && cleanSizes.length > 0 ? cleanSizes : undefined
+        sizes: cleanSizes && cleanSizes.length > 0 ? cleanSizes : undefined,
+        bottomWidth: cleanBottomWidth || undefined,
+        sizeBottomWidths: cleanSizeBottomWidths.length > 0 ? cleanSizeBottomWidths : undefined
       };
       setCategories(categories.map(c => (c._id || c.id) === catId ? updatedCat : c));
       setActiveCategory(updatedCat);
@@ -300,6 +366,16 @@ export default function CustomAdminDashboard() {
 
       const cleanSizes = imageSizes.length > 0 ? imageSizes : null;
       await updateImageSizes(catId, selectedImage._key, cleanSizes);
+
+      const cleanBottomWidth = imageBottomWidth.trim() || null;
+      await updateImageBottomWidth(catId, selectedImage._key, cleanBottomWidth);
+
+      const cleanSizeBottomWidths = mapToArray(imageSizeBottomWidths);
+      await updateImageSizeBottomWidths(
+        catId, 
+        selectedImage._key, 
+        cleanSizeBottomWidths.length > 0 ? cleanSizeBottomWidths : null
+      );
       
       // Update local state
       setActiveCategoryImages(prev => prev.map(img => 
@@ -307,7 +383,9 @@ export default function CustomAdminDashboard() {
           ? { 
               ...img, 
               price: priceNum && priceNum > 0 ? priceNum : undefined,
-              sizes: cleanSizes && cleanSizes.length > 0 ? cleanSizes : undefined
+              sizes: cleanSizes && cleanSizes.length > 0 ? cleanSizes : undefined,
+              bottomWidth: cleanBottomWidth || undefined,
+              sizeBottomWidths: cleanSizeBottomWidths.length > 0 ? cleanSizeBottomWidths : undefined
             } 
           : img
       ));
@@ -541,6 +619,11 @@ export default function CustomAdminDashboard() {
                       Default: ₹{activeCategory.price}
                     </span>
                   ) : null}
+                  {activeCategory._id !== 'all' && activeCategory.bottomWidth ? (
+                    <span className="text-[13px] font-bold px-3 py-1 rounded-full bg-black/5 dark:bg-white/10 text-[#111111] dark:text-[#EBEBEB]">
+                      Bottom: {activeCategory.bottomWidth}
+                    </span>
+                  ) : null}
                 </div>
                 {activeCategory._id !== 'all' && (
                   <div className="flex gap-2">
@@ -615,6 +698,7 @@ export default function CustomAdminDashboard() {
                       const displaySizes = normalizeSizes((img.sizes && img.sizes.length > 0) 
                         ? img.sizes 
                         : (activeCategory?._id !== 'all' ? activeCategory?.sizes : img.categorySizes));
+                      const displayBottomWidth = img.bottomWidth || (activeCategory?._id !== 'all' ? activeCategory?.bottomWidth : img.categoryBottomWidth);
                       return (
                       <button 
                         key={img._key || i} 
@@ -622,10 +706,17 @@ export default function CustomAdminDashboard() {
                         className="group relative aspect-[4/5] rounded-xl overflow-hidden bg-[#E5E3DC] dark:bg-[#222] border-none outline-none block w-full cursor-pointer hover:ring-2 hover:ring-black dark:hover:ring-white transition-all text-left"
                       >
                         <img src={img.url} alt="Product" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
-                        <div className="absolute bottom-2 left-2 right-2 flex justify-between items-center pointer-events-none gap-1">
-                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-md text-white shadow-sm shrink-0">
-                            {displayPrice ? `₹${displayPrice}` : 'No price'}
-                          </span>
+                        <div className="absolute bottom-2 left-2 right-2 flex flex-col gap-1 pointer-events-none">
+                          <div className="flex justify-between items-center gap-1">
+                            <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-md text-white shadow-sm shrink-0">
+                              {displayPrice ? `₹${displayPrice}` : 'No price'}
+                            </span>
+                            {displayBottomWidth && (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-black/75 backdrop-blur-md text-white shadow-sm shrink-0 truncate max-w-[80px]">
+                                B: {displayBottomWidth}
+                              </span>
+                            )}
+                          </div>
                           {displaySizes && displaySizes.length > 0 && (
                             <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-white/80 dark:bg-black/80 backdrop-blur-md text-[#111] dark:text-white shadow-sm truncate">
                               {displaySizes.join(', ')}
@@ -684,6 +775,14 @@ export default function CustomAdminDashboard() {
                   onChange={setNewCategorySizes}
                   label="Default Category Sizes"
                 />
+                <SizeBottomWidthEditor
+                  sizes={newCategorySizes}
+                  bottomWidth={newCategoryBottomWidth}
+                  onBottomWidthChange={setNewCategoryBottomWidth}
+                  sizeBottomWidths={newCategorySizeBottomWidths}
+                  onSizeBottomWidthsChange={setNewCategorySizeBottomWidths}
+                  label="Category Bottom Width"
+                />
                 <button 
                   type="submit" 
                   disabled={isLoading || !newCategoryName.trim()}
@@ -732,6 +831,14 @@ export default function CustomAdminDashboard() {
                   sizes={editCategorySizes}
                   onChange={setEditCategorySizes}
                   label="Default Category Sizes"
+                />
+                <SizeBottomWidthEditor
+                  sizes={editCategorySizes}
+                  bottomWidth={editCategoryBottomWidth}
+                  onBottomWidthChange={setEditCategoryBottomWidth}
+                  sizeBottomWidths={editCategorySizeBottomWidths}
+                  onSizeBottomWidthsChange={setEditCategorySizeBottomWidths}
+                  label="Category Bottom Width"
                 />
                 <button 
                   type="submit" 
@@ -783,6 +890,17 @@ export default function CustomAdminDashboard() {
                   onChange={setImageSizes}
                   defaultCategorySizes={normalizeSizes(selectedImage.categorySizes || activeCategory?.sizes)}
                   label="Item Sizes"
+                />
+
+                <SizeBottomWidthEditor
+                  sizes={imageSizes.length > 0 ? imageSizes : (normalizeSizes(selectedImage.categorySizes || activeCategory?.sizes) || [])}
+                  bottomWidth={imageBottomWidth}
+                  onBottomWidthChange={setImageBottomWidth}
+                  sizeBottomWidths={imageSizeBottomWidths}
+                  onSizeBottomWidthsChange={setImageSizeBottomWidths}
+                  defaultCategoryBottomWidth={selectedImage.categoryBottomWidth || activeCategory?.bottomWidth}
+                  defaultCategorySizeBottomWidths={arrayToMap(selectedImage.categorySizeBottomWidths || activeCategory?.sizeBottomWidths)}
+                  label="Item Bottom Width"
                 />
 
                 <button

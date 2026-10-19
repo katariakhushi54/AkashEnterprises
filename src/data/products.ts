@@ -5,6 +5,8 @@ export interface Product {
   category: string;
   imageUrl: string;
   sizes?: string[];
+  bottomWidth?: string;
+  sizeBottomWidths?: Record<string, string>;
   selectedSize?: string;
   colors?: string[];
   originalPrice?: number;

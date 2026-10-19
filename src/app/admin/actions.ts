@@ -81,31 +81,57 @@ async function requireAuth() {
 
 export async function getCategories() {
   await requireAuth()
-  const query = `*[_type == "category"] | order(_createdAt asc) { _id, title, price, sizes }`
+  const query = `*[_type == "category"] | order(_createdAt asc) { _id, title, price, sizes, bottomWidth, sizeBottomWidths[] { size, bottomWidth } }`
   const result = await writeClient.fetch(query)
-  return result?.map((c: { _id: string, title: string, price?: number, sizes?: string[] }) => ({
+  return result?.map((c: { _id: string, title: string, price?: number, sizes?: string[], bottomWidth?: string, sizeBottomWidths?: { size: string, bottomWidth: string }[] }) => ({
     ...c,
-    sizes: c.sizes ? normalizeSizes(c.sizes) : undefined
+    sizes: c.sizes ? normalizeSizes(c.sizes) : undefined,
+    bottomWidth: c.bottomWidth,
+    sizeBottomWidths: c.sizeBottomWidths || undefined
   })) || []
 }
 
-export async function createCategory(title: string, price?: number, sizes?: string[]) {
+export async function createCategory(
+  title: string, 
+  price?: number, 
+  sizes?: string[], 
+  bottomWidth?: string,
+  sizeBottomWidths?: { size: string, bottomWidth: string }[]
+) {
   await requireAuth()
   const cleanTitle = title.trim()
   if (!cleanTitle) throw new Error('Title cannot be empty')
   const slug = cleanTitle.toLowerCase().replace(/\s+/g, '-').slice(0, 96)
   const parsedPrice = price && !isNaN(price) && price > 0 ? Number(price) : undefined
   const cleanSizes = sizes && sizes.length > 0 ? normalizeSizes(sizes) : undefined
+  const cleanBottom = bottomWidth && bottomWidth.trim() ? bottomWidth.trim() : undefined
+  const cleanSizeBottomWidths = sizeBottomWidths && sizeBottomWidths.length > 0
+    ? sizeBottomWidths.filter(s => s.size && s.bottomWidth).map(s => ({
+        _key: s.size.replace(/[^a-zA-Z0-9_-]/g, '_') || Math.random().toString(36).substring(2, 9),
+        size: s.size.trim(),
+        bottomWidth: s.bottomWidth.trim()
+      }))
+    : undefined
+
   const doc = {
     _type: 'category',
     title: cleanTitle,
     slug: { _type: 'slug', current: slug },
     price: parsedPrice,
     sizes: cleanSizes,
+    bottomWidth: cleanBottom,
+    sizeBottomWidths: cleanSizeBottomWidths,
     products: []
   }
   const result = await writeClient.create(doc)
-  return { id: result._id, title: result.title, price: result.price, sizes: result.sizes ? normalizeSizes(result.sizes) : undefined }
+  return { 
+    id: result._id, 
+    title: result.title, 
+    price: result.price, 
+    sizes: result.sizes ? normalizeSizes(result.sizes) : undefined,
+    bottomWidth: result.bottomWidth,
+    sizeBottomWidths: result.sizeBottomWidths
+  }
 }
 
 
@@ -154,14 +180,18 @@ export async function getCategoryImages(categoryId: string) {
   const query = `*[_type == "category" && _id == $categoryId][0] { 
     price,
     sizes,
-    products[] { _key, price, sizes, asset->{url} } 
+    bottomWidth,
+    sizeBottomWidths[] { size, bottomWidth },
+    products[] { _key, price, sizes, bottomWidth, sizeBottomWidths[] { size, bottomWidth }, asset->{url} } 
   }`
   const result = await writeClient.fetch(query, { categoryId });
-  return result?.products?.map((p: { _key: string, price?: number, sizes?: string[], asset?: { url: string } }) => ({ 
+  return result?.products?.map((p: { _key: string, price?: number, sizes?: string[], bottomWidth?: string, sizeBottomWidths?: { size: string, bottomWidth: string }[], asset?: { url: string } }) => ({ 
     url: p.asset?.url, 
     _key: p._key,
     price: p.price,
-    sizes: p.sizes ? normalizeSizes(p.sizes) : undefined
+    sizes: p.sizes ? normalizeSizes(p.sizes) : undefined,
+    bottomWidth: p.bottomWidth,
+    sizeBottomWidths: p.sizeBottomWidths
   })) || [];
 }
 
@@ -172,22 +202,41 @@ export async function getAllImages() {
     title,
     price,
     sizes,
-    products[] { _key, price, sizes, asset->{url} }
+    bottomWidth,
+    sizeBottomWidths[] { size, bottomWidth },
+    products[] { _key, price, sizes, bottomWidth, sizeBottomWidths[] { size, bottomWidth }, asset->{url} }
   }`
   const result = await writeClient.fetch(query);
-  const allImages: {url: string, _key: string, price?: number, sizes?: string[], categoryId: string, categoryTitle: string, categoryPrice?: number, categorySizes?: string[]}[] = [];
-  result.forEach((cat: { _id: string, title: string, price?: number, sizes?: string[], products?: { _key: string, price?: number, sizes?: string[], asset?: { url: string } }[] }) => {
+  const allImages: {
+    url: string, 
+    _key: string, 
+    price?: number, 
+    sizes?: string[], 
+    bottomWidth?: string, 
+    sizeBottomWidths?: { size: string, bottomWidth: string }[],
+    categoryId: string, 
+    categoryTitle: string, 
+    categoryPrice?: number, 
+    categorySizes?: string[], 
+    categoryBottomWidth?: string,
+    categorySizeBottomWidths?: { size: string, bottomWidth: string }[]
+  }[] = [];
+  result.forEach((cat: { _id: string, title: string, price?: number, sizes?: string[], bottomWidth?: string, sizeBottomWidths?: { size: string, bottomWidth: string }[], products?: { _key: string, price?: number, sizes?: string[], bottomWidth?: string, sizeBottomWidths?: { size: string, bottomWidth: string }[], asset?: { url: string } }[] }) => {
     if (cat.products) {
-      cat.products.forEach((p: { _key: string, price?: number, sizes?: string[], asset?: { url: string } }) => {
+      cat.products.forEach((p) => {
         allImages.push({
           url: p.asset?.url || '',
           _key: p._key,
           price: p.price,
           sizes: p.sizes ? normalizeSizes(p.sizes) : undefined,
+          bottomWidth: p.bottomWidth,
+          sizeBottomWidths: p.sizeBottomWidths,
           categoryId: cat._id,
           categoryTitle: cat.title,
           categoryPrice: cat.price,
-          categorySizes: cat.sizes ? normalizeSizes(cat.sizes) : undefined
+          categorySizes: cat.sizes ? normalizeSizes(cat.sizes) : undefined,
+          categoryBottomWidth: cat.bottomWidth,
+          categorySizeBottomWidths: cat.sizeBottomWidths
         });
       });
     }
@@ -255,6 +304,50 @@ export async function updateImageSizes(categoryId: string, imageKey: string, siz
   }
 }
 
+export async function updateImageBottomWidth(categoryId: string, imageKey: string, bottomWidth: string | null) {
+  await requireAuth()
+  if (!categoryId) throw new Error('Category ID required')
+  if (!imageKey || !/^[a-zA-Z0-9_\-]+$/.test(imageKey)) {
+    throw new Error('Invalid image key format')
+  }
+  const cleanBottom = bottomWidth && bottomWidth.trim() ? bottomWidth.trim() : null;
+  if (!cleanBottom) {
+    await writeClient
+      .patch(categoryId)
+      .unset([`products[_key=="${imageKey}"].bottomWidth`])
+      .commit();
+  } else {
+    await writeClient
+      .patch(categoryId)
+      .set({ [`products[_key=="${imageKey}"].bottomWidth`]: cleanBottom })
+      .commit();
+  }
+}
+
+export async function updateImageSizeBottomWidths(categoryId: string, imageKey: string, sizeBottomWidths: { size: string, bottomWidth: string }[] | null) {
+  await requireAuth()
+  if (!categoryId) throw new Error('Category ID required')
+  if (!imageKey || !/^[a-zA-Z0-9_\-]+$/.test(imageKey)) {
+    throw new Error('Invalid image key format')
+  }
+  if (!sizeBottomWidths || sizeBottomWidths.length === 0) {
+    await writeClient
+      .patch(categoryId)
+      .unset([`products[_key=="${imageKey}"].sizeBottomWidths`])
+      .commit();
+  } else {
+    const cleanMapping = sizeBottomWidths.filter(s => s.size && s.bottomWidth).map(s => ({
+      _key: s.size.replace(/[^a-zA-Z0-9_-]/g, '_') || Math.random().toString(36).substring(2, 9),
+      size: s.size.trim(),
+      bottomWidth: s.bottomWidth.trim()
+    }));
+    await writeClient
+      .patch(categoryId)
+      .set({ [`products[_key=="${imageKey}"].sizeBottomWidths`]: cleanMapping })
+      .commit();
+  }
+}
+
 export async function setCategoryPrice(categoryId: string, price: number | null) {
   await requireAuth()
   if (!categoryId) throw new Error('Category ID required')
@@ -271,7 +364,14 @@ export async function setCategoryPrice(categoryId: string, price: number | null)
   }
 }
 
-export async function updateCategory(categoryId: string, title: string, price?: number | null, sizes?: string[] | null) {
+export async function updateCategory(
+  categoryId: string, 
+  title: string, 
+  price?: number | null, 
+  sizes?: string[] | null, 
+  bottomWidth?: string | null,
+  sizeBottomWidths?: { size: string, bottomWidth: string }[] | null
+) {
   await requireAuth()
   if (!categoryId) throw new Error('Category ID required')
   const cleanTitle = title.trim()
@@ -291,6 +391,24 @@ export async function updateCategory(categoryId: string, title: string, price?: 
     const cleanSizes = normalizeSizes(sizes);
     patch.set({ sizes: cleanSizes })
   }
+
+  if (bottomWidth === null || (bottomWidth !== undefined && !bottomWidth.trim())) {
+    patch.unset(['bottomWidth'])
+  } else if (bottomWidth !== undefined && bottomWidth.trim()) {
+    patch.set({ bottomWidth: bottomWidth.trim() })
+  }
+
+  if (sizeBottomWidths === null || (sizeBottomWidths !== undefined && sizeBottomWidths.length === 0)) {
+    patch.unset(['sizeBottomWidths'])
+  } else if (sizeBottomWidths !== undefined && sizeBottomWidths.length > 0) {
+    const cleanMapping = sizeBottomWidths.filter(s => s.size && s.bottomWidth).map(s => ({
+      _key: s.size.replace(/[^a-zA-Z0-9_-]/g, '_') || Math.random().toString(36).substring(2, 9),
+      size: s.size.trim(),
+      bottomWidth: s.bottomWidth.trim()
+    }));
+    patch.set({ sizeBottomWidths: cleanMapping })
+  }
+
   await patch.commit()
 }
 

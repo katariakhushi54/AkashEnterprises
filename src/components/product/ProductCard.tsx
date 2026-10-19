@@ -2,14 +2,15 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { Product } from "@/data/products";
-import { useCartStore } from "@/store/useCartStore";
+// import { useCartStore } from "@/store/useCartStore";
 import { useState, useEffect, useMemo } from "react";
-import { Plus, X } from "lucide-react";
+import { X } from "lucide-react";
+// import { Plus } from "lucide-react";
 import { useModalHistory } from "@/hooks/useModalHistory";
 import { normalizeSizes } from "@/lib/sizes";
 
 export function ProductCard({ product, showColors = false }: { product: Product, showColors?: boolean }) {
-  const addItem = useCartStore((state) => state.addItem);
+  // const addItem = useCartStore((state) => state.addItem);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   const uniqueSizes = useMemo(() => {
@@ -26,8 +27,16 @@ export function ProductCard({ product, showColors = false }: { product: Product,
     }
   }, [uniqueSizes]);
 
+  const activeBottomWidth = useMemo(() => {
+    if (selectedSize && product.sizeBottomWidths && product.sizeBottomWidths[selectedSize]) {
+      return product.sizeBottomWidths[selectedSize];
+    }
+    return product.bottomWidth;
+  }, [selectedSize, product.sizeBottomWidths, product.bottomWidth]);
+
   useModalHistory(isModalOpen, () => setIsModalOpen(false), `productPopup-${product.id}`);
 
+  /* Cart logic commented out per client request
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
     addItem({
@@ -43,6 +52,7 @@ export function ProductCard({ product, showColors = false }: { product: Product,
       window.dispatchEvent(new CustomEvent('open-cart'));
     }, 150);
   };
+  */
 
   return (
     <>
@@ -71,9 +81,16 @@ export function ProductCard({ product, showColors = false }: { product: Product,
 
         {/* Clean Info & Price below image */}
         <div className="mt-2.5 px-1 flex flex-col gap-0.5">
-          <p className="text-[11px] sm:text-[12px] font-medium tracking-wider text-[#777] dark:text-[#999] uppercase truncate">
-            {product.category}
-          </p>
+          <div className="flex items-center justify-between gap-1">
+            <p className="text-[11px] sm:text-[12px] font-medium tracking-wider text-[#777] dark:text-[#999] uppercase truncate">
+              {product.category}
+            </p>
+            {product.bottomWidth && (
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 text-[#666] dark:text-[#aaa] shrink-0">
+                B: {product.bottomWidth}
+              </span>
+            )}
+          </div>
           <div className="flex items-center justify-between">
             <span className="text-[14px] sm:text-[15px] font-bold text-[#111111] dark:text-[#F8F6F0] tracking-tight">
               {product.price > 0 ? `₹${product.price.toLocaleString('en-IN')}` : 'Price on Request'}
@@ -141,29 +158,36 @@ export function ProductCard({ product, showColors = false }: { product: Product,
                   <div className="flex flex-col gap-2 pb-3 border-b border-black/5 dark:border-white/10">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold text-[#777] dark:text-[#999] uppercase tracking-wider">
-                        Select Size
+                        Available Sizes
                       </span>
                       {selectedSize && (
                         <span className="text-[12px] font-bold text-[#111111] dark:text-[#F8F6F0]">
                           Size: {selectedSize}
+                          {product.sizeBottomWidths?.[selectedSize] ? ` (Bottom: ${product.sizeBottomWidths[selectedSize]})` : ''}
                         </span>
                       )}
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {uniqueSizes.map((size, idx) => {
                         const isSelected = selectedSize === size;
+                        const linkedWidth = product.sizeBottomWidths?.[size];
                         return (
                           <button
                             key={`${size}-${idx}`}
                             type="button"
                             onClick={() => setSelectedSize(size)}
-                            className={`h-9 min-w-[38px] px-3 rounded-xl font-bold text-[13px] transition-all flex items-center justify-center border-none outline-none cursor-pointer ${
+                            className={`min-w-[44px] px-3 ${linkedWidth ? 'py-1.5' : 'h-9'} rounded-xl font-bold text-[13px] transition-all flex flex-col items-center justify-center border-none outline-none cursor-pointer ${
                               isSelected
                                 ? 'bg-[#111111] text-white dark:bg-[#F8F6F0] dark:text-[#111111] shadow-md scale-105'
                                 : 'bg-[#E5E3DC] dark:bg-[#2A2A2A] text-[#333] dark:text-[#CCC] hover:bg-black/10 dark:hover:bg-white/10'
                             }`}
                           >
-                            {size}
+                            <span>{size}</span>
+                            {linkedWidth && (
+                              <span className={`text-[10px] font-normal leading-tight ${isSelected ? 'text-white/80 dark:text-black/75' : 'text-[#777] dark:text-[#999]'}`}>
+                                {linkedWidth}
+                              </span>
+                            )}
                           </button>
                         );
                       })}
@@ -171,8 +195,27 @@ export function ProductCard({ product, showColors = false }: { product: Product,
                   </div>
                 )}
 
+                {/* Bottom Width if available */}
+                {activeBottomWidth && (
+                  <div className="flex items-center justify-between pb-3 border-b border-black/5 dark:border-white/10">
+                    <div className="flex flex-col">
+                      <span className="text-[11px] font-bold text-[#777] dark:text-[#999] uppercase tracking-wider">
+                        Bottom Width / Leg Opening
+                      </span>
+                      {selectedSize && product.sizeBottomWidths?.[selectedSize] && (
+                        <span className="text-[11px] text-[#888]">
+                          For Size {selectedSize}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[13px] font-bold px-3 py-1 rounded-full bg-black/5 dark:bg-white/10 text-[#111111] dark:text-[#F8F6F0]">
+                      {activeBottomWidth}
+                    </span>
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between">
-                  <div className="flex flex-col pr-3">
+                  <div className="flex flex-col">
                     <span className="text-[12px] font-medium text-[#777] dark:text-[#999] uppercase tracking-wider">
                       {product.category}
                     </span>
@@ -181,6 +224,7 @@ export function ProductCard({ product, showColors = false }: { product: Product,
                     </span>
                   </div>
                   
+                  {/* Cart logic commented out per client request
                   <button 
                     onClick={handleAddToCart}
                     className="h-12 px-6 rounded-full bg-[#111111] dark:bg-[#F8F6F0] hover:bg-black dark:hover:bg-white text-white dark:text-[#111111] flex items-center justify-center gap-2 font-bold text-[14px] transition-transform hover:scale-105 border-none outline-none focus:outline-none shadow-md shrink-0 cursor-pointer"
@@ -189,6 +233,7 @@ export function ProductCard({ product, showColors = false }: { product: Product,
                     <Plus size={18} strokeWidth={2} />
                     <span>Add to Cart</span>
                   </button>
+                  */}
                 </div>
               </motion.div>
             </div>

@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { ProductCard } from "@/components/product/ProductCard";
-import { CartSheet } from "@/components/cart/CartSheet";
+// import { CartSheet } from "@/components/cart/CartSheet";
 import { Header } from "@/components/layout/Header";
 import { getStorefrontData } from "./actions";
 import { Loader2 } from "lucide-react";
 
 export default function CollectionPage() {
   const [categories, setCategories] = useState<string[]>(["All"]);
-  const [products, setProducts] = useState<{ id: string, name: string, price: number, category: string, imageUrl: string, sizes?: string[], description: string }[]>([]);
+  const [products, setProducts] = useState<{ id: string, name: string, price: number, category: string, imageUrl: string, sizes?: string[], bottomWidth?: string, sizeBottomWidths?: Record<string, string>, description: string }[]>([]);
   const [activeCategory, setActiveCategory] = useState("All");
   const [isLoading, setIsLoading] = useState(true);
 
@@ -76,7 +76,7 @@ export default function CollectionPage() {
         )}
       </div>
 
-      <CartSheet />
+      {/* <CartSheet /> */}
 
       {/* Minimal Footer */}
       <footer className="mt-auto py-10 border-t border-black/5 dark:border-white/10 bg-[#F8F6F0] dark:bg-[#111111] transition-colors duration-300">

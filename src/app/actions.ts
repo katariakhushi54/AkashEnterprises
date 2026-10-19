@@ -15,10 +15,14 @@ export async function getStorefrontData() {
     title, 
     price,
     sizes,
+    bottomWidth,
+    sizeBottomWidths[] { size, bottomWidth },
     products[] {
       _key,
       price,
       sizes,
+      bottomWidth,
+      sizeBottomWidths[] { size, bottomWidth },
       "url": asset->url
     }
   }`
@@ -33,10 +37,27 @@ export async function getStorefrontData() {
     category: string;
     imageUrl: string;
     sizes: string[];
+    bottomWidth?: string;
+    sizeBottomWidths?: Record<string, string>;
     description: string;
   }[] = []
   
-  categories.forEach((cat: { _id: string; title: string; price?: number; sizes?: string[]; products?: { _key: string; price?: number; sizes?: string[]; url?: string }[] }) => {
+  categories.forEach((cat: { 
+    _id: string; 
+    title: string; 
+    price?: number; 
+    sizes?: string[]; 
+    bottomWidth?: string; 
+    sizeBottomWidths?: { size: string; bottomWidth: string }[];
+    products?: { 
+      _key: string; 
+      price?: number; 
+      sizes?: string[]; 
+      bottomWidth?: string; 
+      sizeBottomWidths?: { size: string; bottomWidth: string }[];
+      url?: string 
+    }[] 
+  }) => {
     if (cat.products) {
       cat.products.forEach((prod, index: number) => {
         if (!prod.url) return;
@@ -50,6 +71,34 @@ export async function getStorefrontData() {
 
         const itemSizes = normalizeSizes(rawSizes);
 
+        // Map size-specific bottom widths
+        const rawSizeBottomWidths = (prod.sizeBottomWidths && prod.sizeBottomWidths.length > 0)
+          ? prod.sizeBottomWidths
+          : (cat.sizeBottomWidths && cat.sizeBottomWidths.length > 0 ? cat.sizeBottomWidths : undefined);
+
+        const sizeBottomWidthsMap: Record<string, string> = {};
+        if (rawSizeBottomWidths) {
+          rawSizeBottomWidths.forEach((item) => {
+            if (item.size && item.bottomWidth && item.bottomWidth.trim()) {
+              sizeBottomWidthsMap[item.size.trim()] = item.bottomWidth.trim();
+            }
+          });
+        }
+
+        let itemBottomWidth = (prod.bottomWidth && prod.bottomWidth.trim())
+          ? prod.bottomWidth.trim()
+          : (cat.bottomWidth && cat.bottomWidth.trim() ? cat.bottomWidth.trim() : undefined);
+
+        // If bottomWidth wasn't explicitly set, synthesize from size mapping if available
+        if (!itemBottomWidth && Object.keys(sizeBottomWidthsMap).length > 0) {
+          const widths = Array.from(new Set(Object.values(sizeBottomWidthsMap)));
+          if (widths.length === 1) {
+            itemBottomWidth = widths[0];
+          } else if (widths.length > 1) {
+            itemBottomWidth = `${widths[0]} - ${widths[widths.length - 1]}`;
+          }
+        }
+
         products.push({
           id: `${cat._id}-${index}`,
           name: `${cat.title} Item`,
@@ -57,6 +106,8 @@ export async function getStorefrontData() {
           category: cat.title,
           imageUrl: prod.url,
           sizes: itemSizes,
+          bottomWidth: itemBottomWidth,
+          sizeBottomWidths: Object.keys(sizeBottomWidthsMap).length > 0 ? sizeBottomWidthsMap : undefined,
           description: `A premium ${cat.title.toLowerCase()}`
         })
       })

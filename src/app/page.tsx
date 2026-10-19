@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { ProductCard } from "@/components/product/ProductCard";
 // import { CartSheet } from "@/components/cart/CartSheet";
 import { Header } from "@/components/layout/Header";
@@ -27,13 +27,28 @@ export default function CollectionPage() {
     loadData();
   }, []);
 
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { All: products.length };
+    products.forEach((p) => {
+      if (p.category) {
+        counts[p.category] = (counts[p.category] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [products]);
+
   const filteredProducts = activeCategory === "All" 
     ? products 
     : products.filter(p => p.category === activeCategory);
 
   return (
     <main className="min-h-screen bg-[#F8F6F0] dark:bg-[#111111] pb-32 font-sans text-[#111111] dark:text-[#EBEBEB] transition-colors duration-300 flex flex-col">
-      <Header />
+      <Header
+        categories={categories}
+        activeCategory={activeCategory}
+        onSelectCategory={setActiveCategory}
+        categoryCounts={categoryCounts}
+      />
 
       <div className="mx-auto w-full max-w-lg md:max-w-xl px-4 md:px-8 pt-6 flex-1">
         

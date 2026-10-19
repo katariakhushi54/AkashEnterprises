@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronRight, Sparkles, ArrowUpRight } from "lucide-react";
+import { X, ChevronRight, Sparkles, ArrowUpRight, Sun, Moon } from "lucide-react";
 import { useModalHistory } from "@/hooks/useModalHistory";
 
 interface CategoryDrawerProps {
@@ -12,6 +12,8 @@ interface CategoryDrawerProps {
   activeCategory: string;
   onSelectCategory: (category: string) => void;
   categoryCounts?: Record<string, number>;
+  isDark?: boolean;
+  onToggleDark?: () => void;
 }
 
 export function CategoryDrawer({
@@ -21,6 +23,8 @@ export function CategoryDrawer({
   activeCategory = "All",
   onSelectCategory,
   categoryCounts = {},
+  isDark = false,
+  onToggleDark = () => {},
 }: CategoryDrawerProps) {
   // Mobile back button closes drawer
   useModalHistory(isOpen, onClose, "categoryDrawer");
@@ -78,14 +82,29 @@ export function CategoryDrawer({
                 <span className="text-[11px] font-bold uppercase tracking-widest text-[#888] dark:text-[#777] flex items-center gap-1.5">
                   <Sparkles size={12} /> Catalog
                 </span>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-[#555] hover:text-[#111] dark:text-[#AAA] dark:hover:text-[#FFF] hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-                  aria-label="Close menu"
-                >
-                  <X size={18} strokeWidth={2} />
-                </button>
+
+                <div className="flex items-center gap-1">
+                  {/* Theme Quick Toggle in Drawer Header */}
+                  <button
+                    type="button"
+                    onClick={onToggleDark}
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-[#555] hover:text-[#111] dark:text-[#AAA] dark:hover:text-[#FFF] hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                    aria-label="Toggle dark mode"
+                    title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                  >
+                    {isDark ? <Sun size={17} strokeWidth={1.75} /> : <Moon size={17} strokeWidth={1.75} />}
+                  </button>
+
+                  {/* Close Button */}
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-[#555] hover:text-[#111] dark:text-[#AAA] dark:hover:text-[#FFF] hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                    aria-label="Close menu"
+                  >
+                    <X size={18} strokeWidth={2} />
+                  </button>
+                </div>
               </div>
 
               <h2
@@ -146,7 +165,22 @@ export function CategoryDrawer({
               })}
             </div>
 
-            {/* Drawer Footer */}
+            {/* Theme Appearance Switch Row */}
+            <div className="px-5 py-3 border-t border-black/5 dark:border-white/5 flex items-center justify-between bg-[#F4F2EC]/60 dark:bg-[#161616]/60">
+              <span className="text-[12px] font-bold text-[#555] dark:text-[#AAA] flex items-center gap-2">
+                {isDark ? <Moon size={14} /> : <Sun size={14} />}
+                <span>Theme</span>
+              </span>
+              <button
+                type="button"
+                onClick={onToggleDark}
+                className="px-3 py-1 rounded-full text-[11px] font-bold bg-white dark:bg-[#222] text-[#111] dark:text-[#F8F6F0] border border-black/5 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/10 transition-all shadow-xs"
+              >
+                {isDark ? "Dark Mode" : "Light Mode"}
+              </button>
+            </div>
+
+            {/* Drawer Footer with Address & Directions */}
             <div className="p-5 border-t border-black/10 dark:border-white/10 bg-[#F4F2EC] dark:bg-[#0D0D0D] transition-colors">
               <p
                 className="text-[12px] font-serif tracking-widest text-[#111111] dark:text-[#F8F6F0] uppercase font-bold"

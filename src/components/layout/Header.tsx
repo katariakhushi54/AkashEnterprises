@@ -1,6 +1,6 @@
 "use client";
 
-import { Sun, Moon, Menu, MapPin, X, ArrowUpRight } from "lucide-react";
+import { Menu, MapPin, X, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -51,23 +51,25 @@ export function Header({
   return (
     <>
       <header className="sticky top-0 z-40 w-full bg-[#F8F6F0] dark:bg-[#111111] transition-colors duration-300">
-        <div className="relative flex h-16 md:h-20 items-center justify-between px-5 md:px-8 mx-auto w-full max-w-lg md:max-w-xl">
-          {/* Left: Hamburger Menu */}
-          <button
-            type="button"
-            onClick={() => setIsDrawerOpen(true)}
-            className="p-1 -ml-1 text-[#111111] dark:text-[#F8F6F0] transition-colors bg-transparent border-none outline-none focus:outline-none flex items-center justify-center cursor-pointer"
-            style={{ background: "transparent", border: "none", boxShadow: "none" }}
-            aria-label="Open categories menu"
-          >
-            <Menu size={22} strokeWidth={1.5} />
-          </button>
+        <div className="relative flex h-16 md:h-20 items-center justify-between px-4 sm:px-6 md:px-8 mx-auto w-full max-w-lg md:max-w-xl">
+          {/* Left Slot: Hamburger Menu */}
+          <div className="w-9 flex items-center justify-start">
+            <button
+              type="button"
+              onClick={() => setIsDrawerOpen(true)}
+              className="p-1.5 -ml-1.5 text-[#111111] dark:text-[#F8F6F0] transition-colors bg-transparent border-none outline-none focus:outline-none flex items-center justify-center cursor-pointer hover:opacity-80"
+              style={{ background: "transparent", border: "none", boxShadow: "none" }}
+              aria-label="Open categories menu"
+            >
+              <Menu size={22} strokeWidth={1.5} />
+            </button>
+          </div>
 
-          {/* Center: Brand (Serif, mathematically dead-centered) */}
-          <div className="absolute left-1/2 -translate-x-1/2 pointer-events-auto">
-            <Link href="/">
+          {/* Center Slot: Brand Title (Sized & Spaced to never overlap side buttons) */}
+          <div className="flex-1 min-w-0 flex justify-center px-2">
+            <Link href="/" className="truncate">
               <span
-                className="text-xl md:text-2xl font-serif tracking-widest text-[#111111] dark:text-[#F8F6F0] uppercase inline-block whitespace-nowrap transition-colors duration-300"
+                className="text-[15px] sm:text-[18px] md:text-2xl font-serif tracking-wider sm:tracking-widest text-[#111111] dark:text-[#F8F6F0] uppercase inline-block whitespace-nowrap transition-colors duration-300"
                 style={{ fontFamily: "var(--font-playfair)" }}
               >
                 AKASH ENTERPRISES
@@ -75,9 +77,8 @@ export function Header({
             </Link>
           </div>
 
-          {/* Right Controls: Location Circle Button + Theme Toggle */}
-          <div className="flex items-center gap-1.5 -mr-1">
-            {/* Circle Location Button */}
+          {/* Right Slot: Circle Location Button */}
+          <div className="w-9 flex items-center justify-end">
             <button
               type="button"
               onClick={() => setIsLocationOpen(!isLocationOpen)}
@@ -91,17 +92,6 @@ export function Header({
             >
               <MapPin size={16} strokeWidth={1.75} />
             </button>
-
-            {/* Theme Toggle Button */}
-            <button
-              type="button"
-              onClick={toggleDark}
-              className="p-1 text-[#111111] dark:text-[#F8F6F0] transition-colors bg-transparent border-none outline-none focus:outline-none flex items-center justify-center cursor-pointer"
-              style={{ background: "transparent", border: "none", boxShadow: "none" }}
-              aria-label="Toggle dark mode"
-            >
-              {isDark ? <Sun size={22} strokeWidth={1.5} /> : <Moon size={22} strokeWidth={1.5} />}
-            </button>
           </div>
 
           {/* Location Popover Card on Touch / Click */}
@@ -110,7 +100,7 @@ export function Header({
               <>
                 {/* Backdrop dismiss overlay */}
                 <div
-                  className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[1px]"
+                  className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[1px]"
                   onClick={() => setIsLocationOpen(false)}
                 />
 
@@ -121,7 +111,7 @@ export function Header({
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -6, scale: 0.95 }}
                   transition={{ duration: 0.16, ease: "easeOut" }}
-                  className="absolute right-4 md:right-8 top-[calc(100%-4px)] z-50 w-[calc(100vw-32px)] max-w-[320px] bg-[#F8F6F0] dark:bg-[#1A1A1A] text-[#111111] dark:text-[#EBEBEB] rounded-2xl p-4 md:p-5 border border-black/10 dark:border-white/10 shadow-2xl transition-colors"
+                  className="absolute right-4 sm:right-6 md:right-8 top-[calc(100%-4px)] z-50 w-[calc(100vw-32px)] max-w-[320px] bg-[#F8F6F0] dark:bg-[#1A1A1A] text-[#111111] dark:text-[#EBEBEB] rounded-2xl p-4 md:p-5 border border-black/10 dark:border-white/10 shadow-2xl transition-colors"
                 >
                   {/* Card Header */}
                   <div className="flex items-center justify-between mb-2">
@@ -172,7 +162,7 @@ export function Header({
         </div>
       </header>
 
-      {/* Side Panel for Categories */}
+      {/* Side Panel for Categories & Theme */}
       <CategoryDrawer
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
@@ -180,6 +170,8 @@ export function Header({
         activeCategory={activeCategory}
         onSelectCategory={onSelectCategory}
         categoryCounts={categoryCounts}
+        isDark={isDark}
+        onToggleDark={toggleDark}
       />
     </>
   );

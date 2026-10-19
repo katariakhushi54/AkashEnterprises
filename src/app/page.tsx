@@ -100,8 +100,8 @@ export default function CollectionPage() {
             <p className="font-bold">No products found in this category.</p>
           </div>
         ) : (
-          /* 2-Column Product Grid */
-          <div className="grid grid-cols-2 gap-x-4 gap-y-8">
+          /* Vertical Product Feed (One above the other) */
+          <div className="grid grid-cols-1 gap-y-8 sm:gap-y-10">
             {filteredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}

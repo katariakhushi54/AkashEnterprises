@@ -149,14 +149,16 @@ export function CategoryDrawer({
             {/* Drawer Footer */}
             <div className="p-5 border-t border-black/10 dark:border-white/10 bg-[#F4F2EC] dark:bg-[#0D0D0D] transition-colors">
               <p
-                className="text-[12px] font-serif tracking-widest text-[#111111] dark:text-[#F8F6F0] uppercase"
+                className="text-[12px] font-serif tracking-widest text-[#111111] dark:text-[#F8F6F0] uppercase font-bold"
                 style={{ fontFamily: "var(--font-playfair)" }}
               >
-                Akash Enterprises
+                Aakash Enterprises
               </p>
-              <p className="text-[11px] text-[#888] dark:text-[#666] mt-0.5">
-                Premium Clothing & Collections
-              </p>
+              <address className="not-italic text-[11px] text-[#777] dark:text-[#888] mt-1.5 leading-relaxed">
+                <p>Maa Sharda Complex, 3rd Floor</p>
+                <p>Near Kahaniya Electric, Shahada</p>
+                <p>Maharashtra – 425409, India</p>
+              </address>
             </div>
           </motion.aside>
         </div>

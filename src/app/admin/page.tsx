@@ -4,8 +4,7 @@ import { useState, useEffect } from 'react';
 import { Upload, Plus, Image as ImageIcon, LogIn, Loader2, X, CheckCircle2, Pencil, Trash2, AlertCircle } from 'lucide-react';
 import { getCategories, createCategory, uploadAsset, addAssetsToCategory, getCategoryImages, getAllImages, updateCategory, deleteCategory, clearCategoryImages, deleteCategoryImage, updateImagePrice, updateImageSizes, updateImageBottomWidth, updateImageSizeBottomWidths, setCategoryPrice, loginAdmin, logoutAdmin, checkAdminAuth } from './actions';
 import { normalizeSizes } from '@/lib/sizes';
-import { SizeTagEditor } from '@/components/admin/SizeTagEditor';
-import { SizeBottomWidthEditor } from '@/components/admin/SizeBottomWidthEditor';
+import { ProductSpecEditor } from '@/components/admin/ProductSpecEditor';
 
 interface Category {
   _id?: string;
@@ -770,18 +769,14 @@ export default function CustomAdminDashboard() {
                     className="w-full h-14 bg-[#F8F6F0] dark:bg-[#111111] rounded-2xl pl-9 pr-4 font-bold text-[15px] border-none outline-none focus:ring-2 focus:ring-black dark:focus:ring-white text-[#111111] dark:text-[#EBEBEB]"
                   />
                 </div>
-                <SizeTagEditor
+                <ProductSpecEditor
                   sizes={newCategorySizes}
-                  onChange={setNewCategorySizes}
-                  label="Default Category Sizes"
-                />
-                <SizeBottomWidthEditor
-                  sizes={newCategorySizes}
+                  onSizesChange={setNewCategorySizes}
                   bottomWidth={newCategoryBottomWidth}
                   onBottomWidthChange={setNewCategoryBottomWidth}
                   sizeBottomWidths={newCategorySizeBottomWidths}
                   onSizeBottomWidthsChange={setNewCategorySizeBottomWidths}
-                  label="Category Bottom Width"
+                  isCategoryLevel={true}
                 />
                 <button 
                   type="submit" 
@@ -827,18 +822,14 @@ export default function CustomAdminDashboard() {
                     className="w-full h-14 bg-[#F8F6F0] dark:bg-[#111111] rounded-2xl pl-9 pr-4 font-bold text-[15px] border-none outline-none focus:ring-2 focus:ring-black dark:focus:ring-white text-[#111111] dark:text-[#EBEBEB]"
                   />
                 </div>
-                <SizeTagEditor
+                <ProductSpecEditor
                   sizes={editCategorySizes}
-                  onChange={setEditCategorySizes}
-                  label="Default Category Sizes"
-                />
-                <SizeBottomWidthEditor
-                  sizes={editCategorySizes}
+                  onSizesChange={setEditCategorySizes}
                   bottomWidth={editCategoryBottomWidth}
                   onBottomWidthChange={setEditCategoryBottomWidth}
                   sizeBottomWidths={editCategorySizeBottomWidths}
                   onSizeBottomWidthsChange={setEditCategorySizeBottomWidths}
-                  label="Category Bottom Width"
+                  isCategoryLevel={true}
                 />
                 <button 
                   type="submit" 
@@ -885,22 +876,16 @@ export default function CustomAdminDashboard() {
                   />
                 </div>
 
-                <SizeTagEditor
+                <ProductSpecEditor
                   sizes={imageSizes}
-                  onChange={setImageSizes}
-                  defaultCategorySizes={normalizeSizes(selectedImage.categorySizes || activeCategory?.sizes)}
-                  label="Item Sizes"
-                />
-
-                <SizeBottomWidthEditor
-                  sizes={imageSizes.length > 0 ? imageSizes : (normalizeSizes(selectedImage.categorySizes || activeCategory?.sizes) || [])}
+                  onSizesChange={setImageSizes}
                   bottomWidth={imageBottomWidth}
                   onBottomWidthChange={setImageBottomWidth}
                   sizeBottomWidths={imageSizeBottomWidths}
                   onSizeBottomWidthsChange={setImageSizeBottomWidths}
+                  defaultCategorySizes={normalizeSizes(selectedImage.categorySizes || activeCategory?.sizes)}
                   defaultCategoryBottomWidth={selectedImage.categoryBottomWidth || activeCategory?.bottomWidth}
                   defaultCategorySizeBottomWidths={arrayToMap(selectedImage.categorySizeBottomWidths || activeCategory?.sizeBottomWidths)}
-                  label="Item Bottom Width"
                 />
 
                 <button

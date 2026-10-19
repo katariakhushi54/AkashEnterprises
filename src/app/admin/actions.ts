@@ -81,12 +81,13 @@ async function requireAuth() {
 
 export async function getCategories() {
   await requireAuth()
-  const query = `*[_type == "category"] | order(_createdAt asc) { _id, title, price, sizes, bottomWidth, sizeBottomWidths[] { size, bottomWidth } }`
+  const query = `*[_type == "category"] | order(_createdAt asc) { _id, title, price, sizes, bottomWidth, length, sizeBottomWidths[] { size, bottomWidth, length } }`
   const result = await writeClient.fetch(query)
-  return result?.map((c: { _id: string, title: string, price?: number, sizes?: string[], bottomWidth?: string, sizeBottomWidths?: { size: string, bottomWidth: string }[] }) => ({
+  return result?.map((c: { _id: string, title: string, price?: number, sizes?: string[], bottomWidth?: string, length?: string, sizeBottomWidths?: { size: string, bottomWidth?: string, length?: string }[] }) => ({
     ...c,
     sizes: c.sizes ? normalizeSizes(c.sizes) : undefined,
     bottomWidth: c.bottomWidth,
+    length: c.length,
     sizeBottomWidths: c.sizeBottomWidths || undefined
   })) || []
 }
@@ -96,7 +97,8 @@ export async function createCategory(
   price?: number, 
   sizes?: string[], 
   bottomWidth?: string,
-  sizeBottomWidths?: { size: string, bottomWidth: string }[]
+  sizeBottomWidths?: { size: string, bottomWidth?: string, length?: string }[],
+  length?: string
 ) {
   await requireAuth()
   const cleanTitle = title.trim()
@@ -105,11 +107,13 @@ export async function createCategory(
   const parsedPrice = price && !isNaN(price) && price > 0 ? Number(price) : undefined
   const cleanSizes = sizes && sizes.length > 0 ? normalizeSizes(sizes) : undefined
   const cleanBottom = bottomWidth && bottomWidth.trim() ? bottomWidth.trim() : undefined
+  const cleanLength = length && length.trim() ? length.trim() : undefined
   const cleanSizeBottomWidths = sizeBottomWidths && sizeBottomWidths.length > 0
-    ? sizeBottomWidths.filter(s => s.size && s.bottomWidth).map(s => ({
+    ? sizeBottomWidths.filter(s => s.size && (s.bottomWidth || s.length)).map(s => ({
         _key: s.size.replace(/[^a-zA-Z0-9_-]/g, '_') || Math.random().toString(36).substring(2, 9),
         size: s.size.trim(),
-        bottomWidth: s.bottomWidth.trim()
+        bottomWidth: s.bottomWidth ? s.bottomWidth.trim() : '',
+        length: s.length ? s.length.trim() : ''
       }))
     : undefined
 
@@ -120,6 +124,7 @@ export async function createCategory(
     price: parsedPrice,
     sizes: cleanSizes,
     bottomWidth: cleanBottom,
+    length: cleanLength,
     sizeBottomWidths: cleanSizeBottomWidths,
     products: []
   }
@@ -130,6 +135,7 @@ export async function createCategory(
     price: result.price, 
     sizes: result.sizes ? normalizeSizes(result.sizes) : undefined,
     bottomWidth: result.bottomWidth,
+    length: result.length,
     sizeBottomWidths: result.sizeBottomWidths
   }
 }
@@ -181,16 +187,18 @@ export async function getCategoryImages(categoryId: string) {
     price,
     sizes,
     bottomWidth,
-    sizeBottomWidths[] { size, bottomWidth },
-    products[] { _key, price, sizes, bottomWidth, sizeBottomWidths[] { size, bottomWidth }, asset->{url} } 
+    length,
+    sizeBottomWidths[] { size, bottomWidth, length },
+    products[] { _key, price, sizes, bottomWidth, length, sizeBottomWidths[] { size, bottomWidth, length }, asset->{url} } 
   }`
   const result = await writeClient.fetch(query, { categoryId });
-  return result?.products?.map((p: { _key: string, price?: number, sizes?: string[], bottomWidth?: string, sizeBottomWidths?: { size: string, bottomWidth: string }[], asset?: { url: string } }) => ({ 
+  return result?.products?.map((p: { _key: string, price?: number, sizes?: string[], bottomWidth?: string, length?: string, sizeBottomWidths?: { size: string, bottomWidth?: string, length?: string }[], asset?: { url: string } }) => ({ 
     url: p.asset?.url, 
     _key: p._key,
     price: p.price,
     sizes: p.sizes ? normalizeSizes(p.sizes) : undefined,
     bottomWidth: p.bottomWidth,
+    length: p.length,
     sizeBottomWidths: p.sizeBottomWidths
   })) || [];
 }
@@ -203,8 +211,9 @@ export async function getAllImages() {
     price,
     sizes,
     bottomWidth,
-    sizeBottomWidths[] { size, bottomWidth },
-    products[] { _key, price, sizes, bottomWidth, sizeBottomWidths[] { size, bottomWidth }, asset->{url} }
+    length,
+    sizeBottomWidths[] { size, bottomWidth, length },
+    products[] { _key, price, sizes, bottomWidth, length, sizeBottomWidths[] { size, bottomWidth, length }, asset->{url} }
   }`
   const result = await writeClient.fetch(query);
   const allImages: {
@@ -213,15 +222,17 @@ export async function getAllImages() {
     price?: number, 
     sizes?: string[], 
     bottomWidth?: string, 
-    sizeBottomWidths?: { size: string, bottomWidth: string }[],
+    length?: string,
+    sizeBottomWidths?: { size: string, bottomWidth?: string, length?: string }[],
     categoryId: string, 
     categoryTitle: string, 
     categoryPrice?: number, 
     categorySizes?: string[], 
     categoryBottomWidth?: string,
-    categorySizeBottomWidths?: { size: string, bottomWidth: string }[]
+    categoryLength?: string,
+    categorySizeBottomWidths?: { size: string, bottomWidth?: string, length?: string }[]
   }[] = [];
-  result.forEach((cat: { _id: string, title: string, price?: number, sizes?: string[], bottomWidth?: string, sizeBottomWidths?: { size: string, bottomWidth: string }[], products?: { _key: string, price?: number, sizes?: string[], bottomWidth?: string, sizeBottomWidths?: { size: string, bottomWidth: string }[], asset?: { url: string } }[] }) => {
+  result.forEach((cat: { _id: string, title: string, price?: number, sizes?: string[], bottomWidth?: string, length?: string, sizeBottomWidths?: { size: string, bottomWidth?: string, length?: string }[], products?: { _key: string, price?: number, sizes?: string[], bottomWidth?: string, length?: string, sizeBottomWidths?: { size: string, bottomWidth?: string, length?: string }[], asset?: { url: string } }[] }) => {
     if (cat.products) {
       cat.products.forEach((p) => {
         allImages.push({
@@ -230,12 +241,14 @@ export async function getAllImages() {
           price: p.price,
           sizes: p.sizes ? normalizeSizes(p.sizes) : undefined,
           bottomWidth: p.bottomWidth,
+          length: p.length,
           sizeBottomWidths: p.sizeBottomWidths,
           categoryId: cat._id,
           categoryTitle: cat.title,
           categoryPrice: cat.price,
           categorySizes: cat.sizes ? normalizeSizes(cat.sizes) : undefined,
           categoryBottomWidth: cat.bottomWidth,
+          categoryLength: cat.length,
           categorySizeBottomWidths: cat.sizeBottomWidths
         });
       });
@@ -324,7 +337,27 @@ export async function updateImageBottomWidth(categoryId: string, imageKey: strin
   }
 }
 
-export async function updateImageSizeBottomWidths(categoryId: string, imageKey: string, sizeBottomWidths: { size: string, bottomWidth: string }[] | null) {
+export async function updateImageLength(categoryId: string, imageKey: string, length: string | null) {
+  await requireAuth()
+  if (!categoryId) throw new Error('Category ID required')
+  if (!imageKey || !/^[a-zA-Z0-9_\-]+$/.test(imageKey)) {
+    throw new Error('Invalid image key format')
+  }
+  const cleanLength = length && length.trim() ? length.trim() : null;
+  if (!cleanLength) {
+    await writeClient
+      .patch(categoryId)
+      .unset([`products[_key=="${imageKey}"].length`])
+      .commit();
+  } else {
+    await writeClient
+      .patch(categoryId)
+      .set({ [`products[_key=="${imageKey}"].length`]: cleanLength })
+      .commit();
+  }
+}
+
+export async function updateImageSizeBottomWidths(categoryId: string, imageKey: string, sizeBottomWidths: { size: string, bottomWidth?: string, length?: string }[] | null) {
   await requireAuth()
   if (!categoryId) throw new Error('Category ID required')
   if (!imageKey || !/^[a-zA-Z0-9_\-]+$/.test(imageKey)) {
@@ -336,11 +369,14 @@ export async function updateImageSizeBottomWidths(categoryId: string, imageKey: 
       .unset([`products[_key=="${imageKey}"].sizeBottomWidths`])
       .commit();
   } else {
-    const cleanMapping = sizeBottomWidths.filter(s => s.size && s.bottomWidth).map(s => ({
-      _key: s.size.replace(/[^a-zA-Z0-9_-]/g, '_') || Math.random().toString(36).substring(2, 9),
-      size: s.size.trim(),
-      bottomWidth: s.bottomWidth.trim()
-    }));
+    const cleanMapping = sizeBottomWidths
+      .filter(s => s.size && (s.bottomWidth || s.length))
+      .map(s => ({
+        _key: s.size.replace(/[^a-zA-Z0-9_-]/g, '_') || Math.random().toString(36).substring(2, 9),
+        size: s.size.trim(),
+        bottomWidth: s.bottomWidth ? s.bottomWidth.trim() : '',
+        length: s.length ? s.length.trim() : ''
+      }));
     await writeClient
       .patch(categoryId)
       .set({ [`products[_key=="${imageKey}"].sizeBottomWidths`]: cleanMapping })
@@ -370,7 +406,8 @@ export async function updateCategory(
   price?: number | null, 
   sizes?: string[] | null, 
   bottomWidth?: string | null,
-  sizeBottomWidths?: { size: string, bottomWidth: string }[] | null
+  sizeBottomWidths?: { size: string, bottomWidth?: string, length?: string }[] | null,
+  length?: string | null
 ) {
   await requireAuth()
   if (!categoryId) throw new Error('Category ID required')
@@ -398,14 +435,23 @@ export async function updateCategory(
     patch.set({ bottomWidth: bottomWidth.trim() })
   }
 
+  if (length === null || (length !== undefined && !length.trim())) {
+    patch.unset(['length'])
+  } else if (length !== undefined && length.trim()) {
+    patch.set({ length: length.trim() })
+  }
+
   if (sizeBottomWidths === null || (sizeBottomWidths !== undefined && sizeBottomWidths.length === 0)) {
     patch.unset(['sizeBottomWidths'])
   } else if (sizeBottomWidths !== undefined && sizeBottomWidths.length > 0) {
-    const cleanMapping = sizeBottomWidths.filter(s => s.size && s.bottomWidth).map(s => ({
-      _key: s.size.replace(/[^a-zA-Z0-9_-]/g, '_') || Math.random().toString(36).substring(2, 9),
-      size: s.size.trim(),
-      bottomWidth: s.bottomWidth.trim()
-    }));
+    const cleanMapping = sizeBottomWidths
+      .filter(s => s.size && (s.bottomWidth || s.length))
+      .map(s => ({
+        _key: s.size.replace(/[^a-zA-Z0-9_-]/g, '_') || Math.random().toString(36).substring(2, 9),
+        size: s.size.trim(),
+        bottomWidth: s.bottomWidth ? s.bottomWidth.trim() : '',
+        length: s.length ? s.length.trim() : ''
+      }));
     patch.set({ sizeBottomWidths: cleanMapping })
   }
 

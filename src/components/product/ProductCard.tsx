@@ -34,6 +34,13 @@ export function ProductCard({ product, showColors = false }: { product: Product,
     return product.bottomWidth;
   }, [selectedSize, product.sizeBottomWidths, product.bottomWidth]);
 
+  const activeLength = useMemo(() => {
+    if (selectedSize && product.sizeLengths && product.sizeLengths[selectedSize]) {
+      return product.sizeLengths[selectedSize];
+    }
+    return product.length;
+  }, [selectedSize, product.sizeLengths, product.length]);
+
   useModalHistory(isModalOpen, () => setIsModalOpen(false), `productPopup-${product.id}`);
 
   /* Cart logic commented out per client request
@@ -85,9 +92,12 @@ export function ProductCard({ product, showColors = false }: { product: Product,
             <p className="text-[11px] sm:text-[12px] font-medium tracking-wider text-[#777] dark:text-[#999] uppercase truncate">
               {product.category}
             </p>
-            {product.bottomWidth && (
+            {(product.bottomWidth || product.length) && (
               <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 text-[#666] dark:text-[#aaa] shrink-0">
-                B: {product.bottomWidth}
+                {[
+                  product.bottomWidth ? `B: ${product.bottomWidth}` : null,
+                  product.length ? `L: ${product.length}` : null,
+                ].filter(Boolean).join(' | ')}
               </span>
             )}
           </div>
@@ -163,7 +173,13 @@ export function ProductCard({ product, showColors = false }: { product: Product,
                       {selectedSize && (
                         <span className="text-[12px] font-bold text-[#111111] dark:text-[#F8F6F0]">
                           Size: {selectedSize}
-                          {product.sizeBottomWidths?.[selectedSize] ? ` (Bottom: ${product.sizeBottomWidths[selectedSize]})` : ''}
+                          {(() => {
+                            const details = [
+                              product.sizeBottomWidths?.[selectedSize] ? `Bottom: ${product.sizeBottomWidths[selectedSize]}` : null,
+                              product.sizeLengths?.[selectedSize] ? `Length: ${product.sizeLengths[selectedSize]}` : null,
+                            ].filter(Boolean);
+                            return details.length > 0 ? ` (${details.join(', ')})` : '';
+                          })()}
                         </span>
                       )}
                     </div>
@@ -171,21 +187,26 @@ export function ProductCard({ product, showColors = false }: { product: Product,
                       {uniqueSizes.map((size, idx) => {
                         const isSelected = selectedSize === size;
                         const linkedWidth = product.sizeBottomWidths?.[size];
+                        const linkedLength = product.sizeLengths?.[size];
+                        const hasSubText = linkedWidth || linkedLength;
                         return (
                           <button
                             key={`${size}-${idx}`}
                             type="button"
                             onClick={() => setSelectedSize(size)}
-                            className={`min-w-[44px] px-3 ${linkedWidth ? 'py-1.5' : 'h-9'} rounded-xl font-bold text-[13px] transition-all flex flex-col items-center justify-center border-none outline-none cursor-pointer ${
+                            className={`min-w-[46px] px-3 ${hasSubText ? 'py-1.5' : 'h-9'} rounded-xl font-bold text-[13px] transition-all flex flex-col items-center justify-center border-none outline-none cursor-pointer ${
                               isSelected
                                 ? 'bg-[#111111] text-white dark:bg-[#F8F6F0] dark:text-[#111111] shadow-md scale-105'
                                 : 'bg-[#E5E3DC] dark:bg-[#2A2A2A] text-[#333] dark:text-[#CCC] hover:bg-black/10 dark:hover:bg-white/10'
                             }`}
                           >
                             <span>{size}</span>
-                            {linkedWidth && (
+                            {hasSubText && (
                               <span className={`text-[10px] font-normal leading-tight ${isSelected ? 'text-white/80 dark:text-black/75' : 'text-[#777] dark:text-[#999]'}`}>
-                                {linkedWidth}
+                                {[
+                                  linkedWidth ? `B:${linkedWidth}` : null,
+                                  linkedLength ? `L:${linkedLength}` : null,
+                                ].filter(Boolean).join(' ')}
                               </span>
                             )}
                           </button>
@@ -195,22 +216,41 @@ export function ProductCard({ product, showColors = false }: { product: Product,
                   </div>
                 )}
 
-                {/* Bottom Width if available */}
-                {activeBottomWidth && (
-                  <div className="flex items-center justify-between pb-3 border-b border-black/5 dark:border-white/10">
-                    <div className="flex flex-col">
+                {/* Garment Measurements (Bottom Width & Length) if available */}
+                {(activeBottomWidth || activeLength) && (
+                  <div className="flex flex-col gap-2 pb-3 border-b border-black/5 dark:border-white/10">
+                    <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold text-[#777] dark:text-[#999] uppercase tracking-wider">
-                        Bottom Width / Leg Opening
+                        Specifications
                       </span>
-                      {selectedSize && product.sizeBottomWidths?.[selectedSize] && (
+                      {selectedSize && (product.sizeBottomWidths?.[selectedSize] || product.sizeLengths?.[selectedSize]) && (
                         <span className="text-[11px] text-[#888]">
                           For Size {selectedSize}
                         </span>
                       )}
                     </div>
-                    <span className="text-[13px] font-bold px-3 py-1 rounded-full bg-black/5 dark:bg-white/10 text-[#111111] dark:text-[#F8F6F0]">
-                      {activeBottomWidth}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {activeBottomWidth && (
+                        <div className="flex-1 flex items-center justify-between bg-black/5 dark:bg-white/5 px-3 py-2 rounded-xl">
+                          <span className="text-[11px] font-semibold text-[#666] dark:text-[#AAA]">
+                            Bottom Width
+                          </span>
+                          <span className="text-[13px] font-bold text-[#111] dark:text-[#F8F6F0]">
+                            {activeBottomWidth}
+                          </span>
+                        </div>
+                      )}
+                      {activeLength && (
+                        <div className="flex-1 flex items-center justify-between bg-black/5 dark:bg-white/5 px-3 py-2 rounded-xl">
+                          <span className="text-[11px] font-semibold text-[#666] dark:text-[#AAA]">
+                            Length
+                          </span>
+                          <span className="text-[13px] font-bold text-[#111] dark:text-[#F8F6F0]">
+                            {activeLength}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 

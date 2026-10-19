@@ -16,13 +16,15 @@ export async function getStorefrontData() {
     price,
     sizes,
     bottomWidth,
-    sizeBottomWidths[] { size, bottomWidth },
+    length,
+    sizeBottomWidths[] { size, bottomWidth, length },
     products[] {
       _key,
       price,
       sizes,
       bottomWidth,
-      sizeBottomWidths[] { size, bottomWidth },
+      length,
+      sizeBottomWidths[] { size, bottomWidth, length },
       "url": asset->url
     }
   }`
@@ -39,6 +41,8 @@ export async function getStorefrontData() {
     sizes: string[];
     bottomWidth?: string;
     sizeBottomWidths?: Record<string, string>;
+    length?: string;
+    sizeLengths?: Record<string, string>;
     description: string;
   }[] = []
   
@@ -48,13 +52,15 @@ export async function getStorefrontData() {
     price?: number; 
     sizes?: string[]; 
     bottomWidth?: string; 
-    sizeBottomWidths?: { size: string; bottomWidth: string }[];
+    length?: string;
+    sizeBottomWidths?: { size: string; bottomWidth?: string; length?: string }[];
     products?: { 
       _key: string; 
       price?: number; 
       sizes?: string[]; 
       bottomWidth?: string; 
-      sizeBottomWidths?: { size: string; bottomWidth: string }[];
+      length?: string;
+      sizeBottomWidths?: { size: string; bottomWidth?: string; length?: string }[];
       url?: string 
     }[] 
   }) => {
@@ -71,16 +77,20 @@ export async function getStorefrontData() {
 
         const itemSizes = normalizeSizes(rawSizes);
 
-        // Map size-specific bottom widths
-        const rawSizeBottomWidths = (prod.sizeBottomWidths && prod.sizeBottomWidths.length > 0)
+        // Map size-specific bottom widths and lengths
+        const rawSizeSpecs = (prod.sizeBottomWidths && prod.sizeBottomWidths.length > 0)
           ? prod.sizeBottomWidths
           : (cat.sizeBottomWidths && cat.sizeBottomWidths.length > 0 ? cat.sizeBottomWidths : undefined);
 
         const sizeBottomWidthsMap: Record<string, string> = {};
-        if (rawSizeBottomWidths) {
-          rawSizeBottomWidths.forEach((item) => {
+        const sizeLengthsMap: Record<string, string> = {};
+        if (rawSizeSpecs) {
+          rawSizeSpecs.forEach((item) => {
             if (item.size && item.bottomWidth && item.bottomWidth.trim()) {
               sizeBottomWidthsMap[item.size.trim()] = item.bottomWidth.trim();
+            }
+            if (item.size && item.length && item.length.trim()) {
+              sizeLengthsMap[item.size.trim()] = item.length.trim();
             }
           });
         }
@@ -99,6 +109,20 @@ export async function getStorefrontData() {
           }
         }
 
+        let itemLength = (prod.length && prod.length.trim())
+          ? prod.length.trim()
+          : (cat.length && cat.length.trim() ? cat.length.trim() : undefined);
+
+        // If length wasn't explicitly set, synthesize from size mapping if available
+        if (!itemLength && Object.keys(sizeLengthsMap).length > 0) {
+          const lengths = Array.from(new Set(Object.values(sizeLengthsMap)));
+          if (lengths.length === 1) {
+            itemLength = lengths[0];
+          } else if (lengths.length > 1) {
+            itemLength = `${lengths[0]} - ${lengths[lengths.length - 1]}`;
+          }
+        }
+
         products.push({
           id: `${cat._id}-${index}`,
           name: `${cat.title} Item`,
@@ -108,6 +132,8 @@ export async function getStorefrontData() {
           sizes: itemSizes,
           bottomWidth: itemBottomWidth,
           sizeBottomWidths: Object.keys(sizeBottomWidthsMap).length > 0 ? sizeBottomWidthsMap : undefined,
+          length: itemLength,
+          sizeLengths: Object.keys(sizeLengthsMap).length > 0 ? sizeLengthsMap : undefined,
           description: `A premium ${cat.title.toLowerCase()}`
         })
       })

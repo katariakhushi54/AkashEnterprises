@@ -42,9 +42,15 @@ export const categoryType = defineType({
       type: 'string',
     }),
     defineField({
+      name: 'length',
+      title: 'Default Length (e.g. 40", 42", 38-42")',
+      description: 'Default length for pants',
+      type: 'string',
+    }),
+    defineField({
       name: 'sizeBottomWidths',
-      title: 'Default Size to Bottom Width Mapping',
-      description: 'Optional per-size bottom width mapping (e.g. 28: 18", 30: 19")',
+      title: 'Default Size to Specs Mapping',
+      description: 'Optional per-size bottom width & length mapping',
       type: 'array',
       of: [
         {
@@ -52,6 +58,7 @@ export const categoryType = defineType({
           fields: [
             { name: 'size', type: 'string', title: 'Size' },
             { name: 'bottomWidth', type: 'string', title: 'Bottom Width' },
+            { name: 'length', type: 'string', title: 'Length' },
           ],
         },
       ],
@@ -72,9 +79,9 @@ export const categoryType = defineType({
             },
             {
               name: 'sizes',
-              title: 'Sizes (Optional)',
               type: 'array',
               of: [{ type: 'string' }],
+              title: 'Sizes (Optional)',
               options: {
                 layout: 'tags',
               },
@@ -85,8 +92,13 @@ export const categoryType = defineType({
               type: 'string',
             },
             {
+              name: 'length',
+              title: 'Length (Optional, e.g. 40", 42")',
+              type: 'string',
+            },
+            {
               name: 'sizeBottomWidths',
-              title: 'Size to Bottom Width Mapping (Optional)',
+              title: 'Size to Specs Mapping (Optional)',
               type: 'array',
               of: [
                 {
@@ -94,6 +106,7 @@ export const categoryType = defineType({
                   fields: [
                     { name: 'size', type: 'string', title: 'Size' },
                     { name: 'bottomWidth', type: 'string', title: 'Bottom Width' },
+                    { name: 'length', type: 'string', title: 'Length' },
                   ],
                 },
               ],

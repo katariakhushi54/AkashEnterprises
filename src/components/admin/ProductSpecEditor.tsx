@@ -11,9 +11,15 @@ interface ProductSpecEditorProps {
   onBottomWidthChange: (width: string) => void;
   sizeBottomWidths: Record<string, string>;
   onSizeBottomWidthsChange: (mapping: Record<string, string>) => void;
+  length?: string;
+  onLengthChange?: (length: string) => void;
+  sizeLengths?: Record<string, string>;
+  onSizeLengthsChange?: (mapping: Record<string, string>) => void;
   defaultCategorySizes?: string[];
   defaultCategoryBottomWidth?: string;
   defaultCategorySizeBottomWidths?: Record<string, string>;
+  defaultCategoryLength?: string;
+  defaultCategorySizeLengths?: Record<string, string>;
   isCategoryLevel?: boolean;
 }
 
@@ -27,9 +33,15 @@ export function ProductSpecEditor({
   onBottomWidthChange,
   sizeBottomWidths = {},
   onSizeBottomWidthsChange,
+  length = '',
+  onLengthChange,
+  sizeLengths = {},
+  onSizeLengthsChange,
   defaultCategorySizes = [],
   defaultCategoryBottomWidth = '',
   defaultCategorySizeBottomWidths = {},
+  defaultCategoryLength = '',
+  defaultCategorySizeLengths = {},
   isCategoryLevel = false,
 }: ProductSpecEditorProps) {
   // Garment type selector: 'pants' | 'tops' | 'custom'
@@ -50,6 +62,12 @@ export function ProductSpecEditor({
         const updatedWidths = { ...sizeBottomWidths };
         delete updatedWidths[size];
         onSizeBottomWidthsChange(updatedWidths);
+      }
+      // Clean up linked length if any
+      if (sizeLengths[size] && onSizeLengthsChange) {
+        const updatedLengths = { ...sizeLengths };
+        delete updatedLengths[size];
+        onSizeLengthsChange(updatedLengths);
       }
     } else {
       const updatedSizes = normalizeSizes([...sizes, size]);
@@ -75,7 +93,7 @@ export function ProductSpecEditor({
     }
   };
 
-  // Change individual size width
+  // Change individual size bottom width
   const handleIndividualWidthChange = (size: string, val: string) => {
     const updated = { ...sizeBottomWidths };
     if (val === '') {
@@ -99,6 +117,33 @@ export function ProductSpecEditor({
     }
   };
 
+  // Change individual size length
+  const handleIndividualLengthChange = (size: string, val: string) => {
+    if (!onSizeLengthsChange) return;
+    const updated = { ...sizeLengths };
+    if (val === '') {
+      delete updated[size];
+    } else {
+      updated[size] = val;
+    }
+    onSizeLengthsChange(updated);
+
+    // Update summary badge / length string
+    if (onLengthChange) {
+      const values = sizes.map(s => updated[s]?.trim()).filter(Boolean);
+      if (values.length > 0) {
+        const unique = Array.from(new Set(values));
+        if (unique.length === 1) {
+          onLengthChange(unique[0]);
+        } else {
+          onLengthChange(`${unique[0]} - ${unique[unique.length - 1]}`);
+        }
+      } else {
+        onLengthChange('');
+      }
+    }
+  };
+
   // Load defaults from category
   const handleLoadCategoryDefaults = () => {
     if (defaultCategorySizes.length > 0) {
@@ -110,14 +155,20 @@ export function ProductSpecEditor({
     if (defaultCategorySizeBottomWidths && Object.keys(defaultCategorySizeBottomWidths).length > 0) {
       onSizeBottomWidthsChange({ ...defaultCategorySizeBottomWidths });
     }
+    if (defaultCategoryLength && onLengthChange) {
+      onLengthChange(defaultCategoryLength);
+    }
+    if (defaultCategorySizeLengths && Object.keys(defaultCategorySizeLengths).length > 0 && onSizeLengthsChange) {
+      onSizeLengthsChange({ ...defaultCategorySizeLengths });
+    }
   };
 
   const configuredCount = useMemo(() => {
-    return sizes.filter(s => !!sizeBottomWidths[s]).length;
-  }, [sizes, sizeBottomWidths]);
+    return sizes.filter(s => !!sizeBottomWidths[s] || !!sizeLengths[s]).length;
+  }, [sizes, sizeBottomWidths, sizeLengths]);
 
   const hasCategoryDefaults = !isCategoryLevel && (
-    defaultCategorySizes.length > 0 || !!defaultCategoryBottomWidth
+    defaultCategorySizes.length > 0 || !!defaultCategoryBottomWidth || !!defaultCategoryLength
   );
 
   return (
@@ -137,6 +188,7 @@ export function ProductSpecEditor({
               onClick={() => {
                 onSizesChange([]);
                 onSizeBottomWidthsChange({});
+                if (onSizeLengthsChange) onSizeLengthsChange({});
               }}
               className="text-[11px] font-semibold text-red-500 hover:text-red-600 dark:hover:text-red-400 transition-colors"
             >
@@ -245,7 +297,7 @@ export function ProductSpecEditor({
       </div>
 
       {/* ─────────────────────────────────────────────────────────────
-          SECTION 2: BOTTOM WIDTH (Only shown for Pants / numbers or custom)
+          SECTION 2: PANTS MEASUREMENTS (Bottom Width & Length)
           ───────────────────────────────────────────────────────────── */}
       {garmentType !== 'tops' && (
         <div className="flex flex-col gap-2.5 pt-2 border-t border-black/10 dark:border-white/10">
@@ -254,7 +306,7 @@ export function ProductSpecEditor({
             <div className="flex items-center gap-1.5">
               <SlidersHorizontal size={14} className="text-[#111] dark:text-[#F8F6F0]" />
               <label className="text-[12px] font-bold uppercase tracking-wider text-[#111] dark:text-[#F8F6F0]">
-                Bottom Width (Leg Opening)
+                Pants Specs (Bottom & Length)
               </label>
             </div>
 
@@ -264,66 +316,107 @@ export function ProductSpecEditor({
                 onClick={() => {
                   onSizeBottomWidthsChange({});
                   onBottomWidthChange('');
+                  if (onSizeLengthsChange) onSizeLengthsChange({});
+                  if (onLengthChange) onLengthChange('');
                 }}
                 className="text-[11px] font-semibold text-red-500 hover:text-red-600 dark:hover:text-red-400 transition-colors"
               >
-                Clear Widths
+                Clear Specs
               </button>
             )}
           </div>
 
           {sizes.length > 0 ? (
-            /* Linked Per-Size Bottom Width Grid */
+            /* Linked Per-Size Measurements Grid */
             <div className="flex flex-col gap-2.5 bg-[#F8F6F0]/80 dark:bg-[#111111]/80 p-3 rounded-2xl border border-black/5 dark:border-white/5">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-56 overflow-y-auto pr-1">
-                {sizes.map(size => {
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-1">
+                {sizes.map((size) => {
                   const currentWidth = sizeBottomWidths[size] || '';
+                  const currentLength = sizeLengths[size] || '';
                   return (
                     <div
                       key={size}
-                      className="flex items-center justify-between gap-1.5 bg-white dark:bg-[#1A1A1A] px-2.5 py-1.5 rounded-xl border border-black/5 dark:border-white/5 shadow-xs"
+                      className="flex items-center justify-between gap-2 bg-white dark:bg-[#1A1A1A] px-3 py-2 rounded-xl border border-black/5 dark:border-white/5 shadow-xs"
                     >
-                      <span className="font-bold text-[13px] text-[#111] dark:text-[#F8F6F0] w-7 shrink-0">
-                        {size}
+                      <span className="font-bold text-[13px] text-[#111] dark:text-[#F8F6F0] w-12 shrink-0">
+                        Size {size}
                       </span>
-                      <span className="text-[#888] text-[11px]">→</span>
-                      <input
-                        type="text"
-                        value={currentWidth}
-                        onChange={(e) => handleIndividualWidthChange(size, e.target.value)}
-                        placeholder='e.g. 20"'
-                        className="w-16 h-7 text-center font-bold text-[12px] bg-[#F8F6F0] dark:bg-[#111111] rounded-lg border-none outline-none focus:ring-1 focus:ring-black dark:focus:ring-white text-[#111111] dark:text-[#EBEBEB]"
-                      />
+
+                      <div className="flex items-center gap-1.5 flex-1 justify-end">
+                        {/* Bottom Width Input */}
+                        <div className="flex items-center gap-1">
+                          <span className="text-[10px] font-bold uppercase text-[#888]">B:</span>
+                          <input
+                            type="text"
+                            value={currentWidth}
+                            onChange={(e) => handleIndividualWidthChange(size, e.target.value)}
+                            placeholder='20"'
+                            className="w-14 h-7 text-center font-bold text-[12px] bg-[#F8F6F0] dark:bg-[#111111] rounded-lg border-none outline-none focus:ring-1 focus:ring-black dark:focus:ring-white text-[#111111] dark:text-[#EBEBEB]"
+                          />
+                        </div>
+
+                        {/* Length Input */}
+                        <div className="flex items-center gap-1">
+                          <span className="text-[10px] font-bold uppercase text-[#888]">L:</span>
+                          <input
+                            type="text"
+                            value={currentLength}
+                            onChange={(e) => handleIndividualLengthChange(size, e.target.value)}
+                            placeholder='40"'
+                            className="w-14 h-7 text-center font-bold text-[12px] bg-[#F8F6F0] dark:bg-[#111111] rounded-lg border-none outline-none focus:ring-1 focus:ring-black dark:focus:ring-white text-[#111111] dark:text-[#EBEBEB]"
+                          />
+                        </div>
+                      </div>
                     </div>
                   );
                 })}
               </div>
 
               {/* Live Summary Footer */}
-              <div className="flex items-center justify-between pt-1 border-t border-black/5 dark:border-white/5 text-[11px]">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-1 border-t border-black/5 dark:border-white/5 text-[11px] gap-1">
                 <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
                   <Check size={12} strokeWidth={2.5} />
                   {configuredCount}/{sizes.length} sizes configured
                 </span>
-                {bottomWidth && (
-                  <span className="font-bold text-[#666] dark:text-[#AAA]">
-                    Summary: {bottomWidth}
-                  </span>
-                )}
+                <div className="flex items-center gap-2 font-bold text-[#666] dark:text-[#AAA]">
+                  {bottomWidth && <span>Bottom: {bottomWidth}</span>}
+                  {bottomWidth && length && <span>•</span>}
+                  {length && <span>Length: {length}</span>}
+                </div>
               </div>
             </div>
           ) : (
-            /* Fallback single input if no sizes selected yet */
-            <div className="flex flex-col gap-1.5 bg-[#F8F6F0]/80 dark:bg-[#111111]/80 p-3 rounded-2xl border border-black/5 dark:border-white/5">
-              <input
-                type="text"
-                value={bottomWidth}
-                onChange={(e) => onBottomWidthChange(e.target.value)}
-                placeholder={defaultCategoryBottomWidth ? `e.g. 20" (Default: ${defaultCategoryBottomWidth})` : 'e.g., 20", 22", Balloon'}
-                className="h-10 bg-white dark:bg-[#1A1A1A] rounded-xl px-3 font-bold text-[13px] border-none outline-none focus:ring-2 focus:ring-black dark:focus:ring-white text-[#111111] dark:text-[#EBEBEB]"
-              />
+            /* Fallback inputs if no sizes selected yet */
+            <div className="flex flex-col gap-2 bg-[#F8F6F0]/80 dark:bg-[#111111]/80 p-3 rounded-2xl border border-black/5 dark:border-white/5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-bold uppercase text-[#777] dark:text-[#888]">
+                    Default Bottom Width
+                  </label>
+                  <input
+                    type="text"
+                    value={bottomWidth}
+                    onChange={(e) => onBottomWidthChange(e.target.value)}
+                    placeholder={defaultCategoryBottomWidth ? `e.g. 20" (Default: ${defaultCategoryBottomWidth})` : 'e.g. 20", Balloon'}
+                    className="h-10 bg-white dark:bg-[#1A1A1A] rounded-xl px-3 font-bold text-[13px] border-none outline-none focus:ring-2 focus:ring-black dark:focus:ring-white text-[#111111] dark:text-[#EBEBEB]"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-bold uppercase text-[#777] dark:text-[#888]">
+                    Default Length
+                  </label>
+                  <input
+                    type="text"
+                    value={length}
+                    onChange={(e) => onLengthChange && onLengthChange(e.target.value)}
+                    placeholder={defaultCategoryLength ? `e.g. 40" (Default: ${defaultCategoryLength})` : 'e.g. 40", 38-42"'}
+                    className="h-10 bg-white dark:bg-[#1A1A1A] rounded-xl px-3 font-bold text-[13px] border-none outline-none focus:ring-2 focus:ring-black dark:focus:ring-white text-[#111111] dark:text-[#EBEBEB]"
+                  />
+                </div>
+              </div>
               <p className="text-[11px] text-[#888] dark:text-[#777]">
-                Select sizes above to configure individual bottom width per size.
+                Select sizes above to configure individual bottom width and length per size.
               </p>
             </div>
           )}

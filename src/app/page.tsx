@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo, useRef } from "react";
 import { ProductCard } from "@/components/product/ProductCard";
+import { Product } from "@/data/products";
 // import { CartSheet } from "@/components/cart/CartSheet";
 import { Header } from "@/components/layout/Header";
 import { getStorefrontData } from "./actions";
@@ -9,7 +10,7 @@ import { Loader2 } from "lucide-react";
 
 export default function CollectionPage() {
   const [categories, setCategories] = useState<string[]>(["All"]);
-  const [products, setProducts] = useState<{ id: string, name: string, price: number, category: string, imageUrl: string, sizes?: string[], bottomWidth?: string, sizeBottomWidths?: Record<string, string>, description: string }[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [activeCategory, setActiveCategory] = useState("All");
   const [isLoading, setIsLoading] = useState(true);
 

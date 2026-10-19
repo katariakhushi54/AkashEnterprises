@@ -7,6 +7,8 @@ export interface Product {
   sizes?: string[];
   bottomWidth?: string;
   sizeBottomWidths?: Record<string, string>;
+  length?: string;
+  sizeLengths?: Record<string, string>;
   selectedSize?: string;
   colors?: string[];
   originalPrice?: number;

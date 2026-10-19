@@ -5,7 +5,7 @@ import { ProductCard } from "@/components/product/ProductCard";
 // import { CartSheet } from "@/components/cart/CartSheet";
 import { Header } from "@/components/layout/Header";
 import { getStorefrontData } from "./actions";
-import { Loader2, MapPin, ArrowUpRight } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 export default function CollectionPage() {
   const [categories, setCategories] = useState<string[]>(["All"]);
@@ -110,49 +110,18 @@ export default function CollectionPage() {
 
       {/* <CartSheet /> */}
 
-      {/* Editorial Storefront Footer */}
-      <footer className="mt-auto pt-12 pb-14 border-t border-black/10 dark:border-white/10 bg-[#F4F2EC] dark:bg-[#0E0E0E] transition-colors duration-300">
-        <div className="mx-auto w-full max-w-lg md:max-w-xl px-4 md:px-8 flex flex-col items-center text-center">
-          {/* Brand Header */}
+      {/* Minimal Footer */}
+      <footer className="mt-auto py-10 border-t border-black/5 dark:border-white/10 bg-[#F8F6F0] dark:bg-[#111111] transition-colors duration-300">
+        <div className="mx-auto w-full max-w-lg md:max-w-xl px-4 flex flex-col items-center justify-center gap-2">
           <p
-            className="text-lg md:text-xl font-serif tracking-[0.2em] text-[#111111] dark:text-[#F8F6F0] uppercase transition-colors"
+            className="text-[15px] font-serif tracking-widest text-[#111111] dark:text-[#F8F6F0] uppercase transition-colors"
             style={{ fontFamily: "var(--font-playfair)" }}
           >
-            AAKASH ENTERPRISES
+            AKASH ENTERPRISES
           </p>
-          <p className="text-[11px] uppercase tracking-widest text-[#777] dark:text-[#888] font-medium mt-1 mb-6">
-            Wholesale & Retail Clothing
+          <p className="text-[12px] font-sans text-[#999999] dark:text-[#666] mt-1 transition-colors">
+            &copy; {new Date().getFullYear()} Akash Enterprises. All rights reserved.
           </p>
-
-          {/* Location & Address Card */}
-          <div className="w-full bg-[#F8F6F0] dark:bg-[#161616] rounded-2xl p-5 border border-black/5 dark:border-white/5 shadow-xs flex flex-col items-center gap-2 transition-colors">
-            <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[#666] dark:text-[#999]">
-              <MapPin size={13} className="text-[#111] dark:text-[#F8F6F0]" />
-              <span>Store Address</span>
-            </div>
-
-            <address className="not-italic text-[13px] leading-relaxed text-[#333] dark:text-[#CCC]">
-              <p className="font-bold text-[#111] dark:text-[#F8F6F0]">Maa Sharda Complex, 3rd Floor</p>
-              <p>Near Kahaniya Electric, Shahada</p>
-              <p className="font-medium">Maharashtra – 425409, India</p>
-            </address>
-
-            <a
-              href="https://maps.google.com/?q=Maa+Sharda+Complex,+Near+Kahaniya+Electric,+Shahada,+Maharashtra+425409"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-1.5 inline-flex items-center gap-1.5 text-[11px] font-bold text-[#111] dark:text-[#F8F6F0] hover:underline underline-offset-4 opacity-80 hover:opacity-100 transition-opacity"
-            >
-              <span>Get Directions</span>
-              <ArrowUpRight size={12} />
-            </a>
-          </div>
-
-          {/* Footer Subtext */}
-          <div className="mt-8 pt-5 border-t border-black/5 dark:border-white/5 w-full flex flex-col sm:flex-row items-center justify-between text-[11px] text-[#888] dark:text-[#666] gap-2">
-            <p>&copy; {new Date().getFullYear()} Aakash Enterprises. All rights reserved.</p>
-            <p className="tracking-wide">Shahada, Maharashtra</p>
-          </div>
         </div>
       </footer>
     </main>

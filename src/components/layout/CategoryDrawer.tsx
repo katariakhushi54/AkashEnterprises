@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronRight, Sparkles } from "lucide-react";
+import { X, ChevronRight, Sparkles, ArrowUpRight } from "lucide-react";
 import { useModalHistory } from "@/hooks/useModalHistory";
 
 interface CategoryDrawerProps {
@@ -155,10 +155,19 @@ export function CategoryDrawer({
                 Aakash Enterprises
               </p>
               <address className="not-italic text-[11px] text-[#777] dark:text-[#888] mt-1.5 leading-relaxed">
-                <p>Maa Sharda Complex, 3rd Floor</p>
+                <p className="font-semibold text-[#111] dark:text-[#EEE]">Maa Sharda Complex, 3rd Floor</p>
                 <p>Near Kahaniya Electric, Shahada</p>
                 <p>Maharashtra – 425409, India</p>
               </address>
+              <a
+                href="https://maps.google.com/?q=Maa+Sharda+Complex,+Near+Kahaniya+Electric,+Shahada,+Maharashtra+425409"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2.5 inline-flex items-center gap-1 text-[11px] font-bold text-[#111] dark:text-[#F8F6F0] hover:underline underline-offset-4 opacity-80 hover:opacity-100 transition-opacity"
+              >
+                <span>Get Directions</span>
+                <ArrowUpRight size={11} strokeWidth={2.2} />
+              </a>
             </div>
           </motion.aside>
         </div>
